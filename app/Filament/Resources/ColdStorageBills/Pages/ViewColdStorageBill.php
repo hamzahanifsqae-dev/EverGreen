@@ -50,7 +50,7 @@ class ViewColdStorageBill extends ViewRecord
                     && (float) $this->record->due_amount > 0
                     && ColdStorageAccess::can('update'))
                 ->modalHeading('Record payment received')
-                ->modalDescription(function (): string {
+                ->modalDescription(function () use ($currency): string {
                     $this->record->refresh();
 
                     return 'Outstanding balance: '.$currency.' '.number_format((float) $this->record->due_amount, 2);
@@ -60,7 +60,7 @@ class ViewColdStorageBill extends ViewRecord
 
                     return [
                         'amount' => number_format((float) $this->record->due_amount, 2, '.', ''),
-                        'payment_date' => now(),
+                        'payment_date' => now()->toDateString(),
                         'method' => 'cash_in_hand',
                     ];
                 })
@@ -94,7 +94,7 @@ class ViewColdStorageBill extends ViewRecord
                         ->required()
                         ->helperText('This amount is added to the selected cash account.'),
                 ])
-                ->action(function (array $data, BillingService $billing): void {
+                ->action(function (array $data, BillingService $billing) use ($currency): void {
                     try {
                         $this->record->refresh();
 
