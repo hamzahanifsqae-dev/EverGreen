@@ -16,9 +16,9 @@ class ColdStorageDocumentController
     public function show(string $type, string $id): View
     {
         $record = match ($type) {
-            'receipt' => ColdStorageReceipt::query()->with(['merchant', 'customer', 'branch', 'business', 'items.product', 'items.allocations.chamber', 'items.allocations.location'])->findOrFail($id),
-            'dispatch' => ColdStorageDispatch::query()->with(['merchant', 'customer', 'branch', 'business', 'lines.receiptItem.product', 'lines.chamber', 'lines.location'])->findOrFail($id),
-            'bill' => ColdStorageBill::query()->with(['merchant', 'customer', 'branch', 'business', 'lines', 'services'])->findOrFail($id),
+            'receipt' => ColdStorageReceipt::query()->with(['merchant.logo', 'customer', 'branch', 'business', 'items.product', 'items.allocations.chamber', 'items.allocations.location'])->findOrFail($id),
+            'dispatch' => ColdStorageDispatch::query()->with(['merchant.logo', 'customer', 'branch', 'business', 'lines.receiptItem.product', 'lines.chamber', 'lines.location'])->findOrFail($id),
+            'bill' => ColdStorageBill::query()->with(['merchant.logo', 'customer', 'branch', 'business', 'lines', 'services'])->findOrFail($id),
             default => abort(404),
         };
 

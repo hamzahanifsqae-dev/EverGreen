@@ -51,9 +51,10 @@ class ColdStorageBillInvoiceActionTest extends TestCase
             'currency' => 'PKR',
         ])->render();
 
-        $this->assertStringContainsString('Storage invoice', $html);
-        $this->assertStringContainsString('Invoice SB-TEST-1', $html);
+        $this->assertStringContainsString('>Invoice</h1>', $html);
+        $this->assertStringContainsString('# SB-TEST-1', $html);
         $this->assertStringContainsString('Print invoice', $html);
+        $this->assertStringContainsString('Amount due', $html);
         $this->assertStringContainsString('PKR 400.00', $html);
     }
 }
