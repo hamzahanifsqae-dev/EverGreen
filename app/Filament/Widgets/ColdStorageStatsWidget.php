@@ -13,6 +13,7 @@ use App\Models\ColdStorageMovement;
 use App\Models\ColdStorageReceipt;
 use App\Models\ColdStorageReceiptItem;
 use App\Models\Customer;
+use App\Models\Merchant;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\ColdStorage\ActionAlertService;
@@ -53,6 +54,7 @@ class ColdStorageStatsWidget extends Widget
         if ($merchantId === null) {
             return [
                 'stats' => $this->emptyStats(),
+                'cashAccounts' => $this->emptyCashAccounts(),
                 'trend' => $this->emptyTrend(),
                 'stock' => $this->emptyStock(),
                 'occupancy' => $this->emptyOccupancy(),
@@ -62,6 +64,8 @@ class ColdStorageStatsWidget extends Widget
                 'insights' => $this->emptyInsights(),
             ];
         }
+
+        $merchant = Merchant::query()->whereKey($merchantId)->first();
 
         $chamberQuery = ColdStorageAccess::scope(ColdStorageChamber::query()->where('is_active', true));
         $this->applyBranchFilters($chamberQuery, $filters);
@@ -154,6 +158,10 @@ class ColdStorageStatsWidget extends Widget
             'leaders' => [
                 'customers' => $this->topCustomersByReceipts($filters),
             ],
+            'cashAccounts' => [
+                'cash_in_hand' => (float) ($merchant?->cash_in_hand ?? 0),
+                'cash_in_bank' => (float) ($merchant?->cash_in_bank ?? 0),
+            ],
             'currency' => $currency,
             'filterPeriodLabel' => $this->filterPeriodLabel($filters),
             'insights' => $this->insights($reportFilters, $chambers),
@@ -182,6 +190,17 @@ class ColdStorageStatsWidget extends Widget
             'action_alerts_open' => null,
             'customers' => UiModules::enabled('customers') ? 0 : null,
             'products' => UiModules::enabled('products') ? 0 : null,
+        ];
+    }
+
+    /**
+     * @return array{cash_in_hand: float, cash_in_bank: float}
+     */
+    private function emptyCashAccounts(): array
+    {
+        return [
+            'cash_in_hand' => 0.0,
+            'cash_in_bank' => 0.0,
         ];
     }
 

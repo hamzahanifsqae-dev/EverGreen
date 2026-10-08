@@ -50,21 +50,41 @@ class ViewColdStorageBill extends ViewRecord
                     && (float) $this->record->due_amount > 0
                     && ColdStorageAccess::can('update'))
                 ->modalHeading('Record payment received')
-                ->modalDescription(fn (): string => 'Outstanding balance: '.$currency.' '.number_format((float) $this->record->due_amount, 2))
+                ->modalDescription(function (): string {
+                    $this->record->refresh();
+
+                    return 'Outstanding balance: '.$currency.' '.number_format((float) $this->record->due_amount, 2);
+                })
+                ->fillForm(function (): array {
+                    $this->record->refresh();
+
+                    return [
+                        'amount' => number_format((float) $this->record->due_amount, 2, '.', ''),
+                        'payment_date' => now(),
+                        'method' => 'cash_in_hand',
+                    ];
+                })
                 ->schema([
                     TextInput::make('amount')
                         ->label('Amount received')
                         ->numeric()
                         ->required()
                         ->minValue(0.01)
-                        ->prefix($currency)
-                        ->default(fn (): string => number_format((float) $this->record->due_amount, 2, '.', '')),
+                        ->rule(function (): \Closure {
+                            return function (string $attribute, mixed $value, \Closure $fail): void {
+                                $due = (float) $this->record->fresh()?->due_amount;
+
+                                if ((float) $value - $due > 0.009) {
+                                    $fail('Amount cannot exceed the outstanding balance of '.config('cold-storage.currency').' '.number_format($due, 2).'.');
+                                }
+                            };
+                        })
+                        ->prefix($currency),
                     DatePicker::make('payment_date')
                         ->label('Payment date')
                         ->required()
                         ->native(false)
-                        ->displayFormat('d/m/Y')
-                        ->default(now()),
+                        ->displayFormat('d/m/Y'),
                     Select::make('method')
                         ->label('Received into')
                         ->options([
@@ -72,11 +92,16 @@ class ViewColdStorageBill extends ViewRecord
                             'cash_in_bank' => 'Bank',
                         ])
                         ->required()
-                        ->default('cash_in_hand')
                         ->helperText('This amount is added to the selected cash account.'),
                 ])
                 ->action(function (array $data, BillingService $billing): void {
                     try {
+                        $this->record->refresh();
+
+                        if ((float) $this->record->due_amount <= 0) {
+                            throw ColdStorageException::make('This bill is already fully paid.');
+                        }
+
                         $paymentDate = Carbon::parse($data['payment_date'])->toDateString();
                         $account = $billing->cashAccountForMethod((string) $data['method']);
                         $accountLabel = $account === 'cash_in_bank' ? 'Bank' : 'Cash in hand';
@@ -89,15 +114,22 @@ class ViewColdStorageBill extends ViewRecord
                             ColdStorageAccess::actorId(),
                         );
 
-                        $this->record->refresh()->load('payments');
+                        $this->record->refresh()->load(['payments', 'lines']);
 
                         Notification::make()
                             ->title('Payment recorded')
                             ->body($currency.' '.number_format((float) $data['amount'], 2).' added to '.$accountLabel.'. Due now '.$currency.' '.number_format((float) $this->record->due_amount, 2).'.')
                             ->success()
                             ->send();
+
+                        $this->redirect(ColdStorageBillResource::getUrl('view', ['record' => $this->record]));
                     } catch (ColdStorageException $exception) {
                         Notification::make()->title('Could not record payment')->body($exception->getMessage())->danger()->send();
+                        $this->halt();
+                    } catch (\Throwable $exception) {
+                        report($exception);
+                        Notification::make()->title('Could not record payment')->body($exception->getMessage())->danger()->send();
+                        $this->halt();
                     }
                 }),
             ColdStorageActions::invoice(),

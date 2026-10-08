@@ -1,6 +1,7 @@
 <x-filament-widgets::widget>
     @php
         $stats = $stats ?? [];
+        $cashAccounts = $cashAccounts ?? ['cash_in_hand' => 0, 'cash_in_bank' => 0];
         $stock = $stock ?? ['packages' => 0, 'weight' => 0, 'lots' => 0];
         $occupancy = $occupancy ?? ['capacity' => 0, 'occupied' => 0, 'available' => 0, 'unit' => 'kg'];
         $trend = $trend ?? ['labels' => [], 'receipts' => [], 'dispatches' => []];
@@ -9,6 +10,9 @@
         $filterPeriodLabel = $filterPeriodLabel ?? 'All time';
         $insights = $insights ?? ['urls' => [], 'heatmap' => [], 'ageing' => [], 'chamber_heat' => []];
         $insightUrls = $insights['urls'] ?? [];
+        $cashInHand = (float) ($cashAccounts['cash_in_hand'] ?? 0);
+        $cashInBank = (float) ($cashAccounts['cash_in_bank'] ?? 0);
+        $cashTotal = $cashInHand + $cashInBank;
 
         $labels = $trend['labels'] ?? [];
         $receiptSeries = $trend['receipts'] ?? [];
@@ -165,6 +169,36 @@
                             <span class="font-medium text-slate-900 dark:text-slate-100">{{ $currency }} {{ number_format((float) ($stats['billed_amount'] ?? 0), 2) }}</span>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Cash accounts --}}
+        <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5 stats-card dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-700/40">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <p class="text-lg font-semibold text-slate-900 dark:text-slate-100">Cash Accounts</p>
+                <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-200">
+                    Total {{ $currency }} {{ number_format($cashTotal, 2) }}
+                </span>
+            </div>
+
+            <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div class="rounded-2xl bg-gradient-to-br from-lime-50 to-white p-5 shadow-sm ring-1 ring-lime-100 stats-panel dark:from-slate-950 dark:to-slate-950 dark:ring-lime-900/50">
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">Cash in hand</p>
+                        <span class="rounded-full bg-lime-50 px-3 py-1 text-xs font-semibold text-lime-700 dark:bg-lime-900/40 dark:text-lime-200">Cash</span>
+                    </div>
+                    <p class="mt-4 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ $currency }} {{ number_format($cashInHand, 2) }}</p>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Available physical cash</p>
+                </div>
+
+                <div class="rounded-2xl bg-gradient-to-br from-cyan-50 to-white p-5 shadow-sm ring-1 ring-cyan-100 stats-panel dark:from-slate-950 dark:to-slate-950 dark:ring-cyan-900/50">
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">Bank</p>
+                        <span class="rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-200">Bank</span>
+                    </div>
+                    <p class="mt-4 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ $currency }} {{ number_format($cashInBank, 2) }}</p>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Cash in bank account</p>
                 </div>
             </div>
         </div>

@@ -172,8 +172,12 @@ class BillingService
                 throw ColdStorageException::make('Payment amount must be greater than zero.');
             }
 
+            if ((float) $bill->due_amount <= 0) {
+                throw ColdStorageException::make('This bill is already fully paid.');
+            }
+
             if ($amount - (float) $bill->due_amount > 0.009) {
-                throw ColdStorageException::make('Payment cannot exceed the outstanding balance.');
+                throw ColdStorageException::make('Payment cannot exceed the outstanding balance of '.number_format((float) $bill->due_amount, 2).'.');
             }
 
             $account = $this->cashAccountForMethod($method);
