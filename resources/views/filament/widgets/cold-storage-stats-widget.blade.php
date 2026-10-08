@@ -109,14 +109,14 @@
                         <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-200">OUT</span>
                     </div>
                     <p class="mt-4 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ number_format((float) ($stats['dispatch_packages'] ?? 0), 2) }}</p>
-                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Packages dispatched (posted)</p>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Packages returned (posted)</p>
                     <div class="mt-4 space-y-2 text-sm text-slate-700 dark:text-slate-300">
                         <div class="flex items-center justify-between">
-                            <span>Posted dispatches</span>
+                            <span>Posted returns</span>
                             <span class="font-medium text-slate-900 dark:text-slate-100">{{ number_format($stats['dispatches_posted'] ?? 0) }}</span>
                         </div>
                         <div class="flex items-center justify-between">
-                            <span>Draft dispatches</span>
+                            <span>Draft returns</span>
                             <span class="font-medium text-slate-900 dark:text-slate-100">{{ number_format($stats['dispatches_draft'] ?? 0) }}</span>
                         </div>
                     </div>
@@ -343,7 +343,7 @@
                     <div class="rounded-2xl bg-gradient-to-br from-blue-50 via-white to-emerald-50 p-6 ring-1 ring-gray-950/5 stats-panel dark:bg-slate-900 dark:ring-slate-700/40">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">Receipts vs Dispatches</p>
+                                <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">Receipts vs Returns</p>
                                 <p class="text-xs text-slate-500 dark:text-slate-400">Monthly trend</p>
                             </div>
                             <div class="flex items-center gap-2 text-xs text-gray-500">
@@ -351,7 +351,7 @@
                                     <span class="h-2 w-2 rounded-full bg-blue-500"></span>Receipts
                                 </button>
                                 <button type="button" class="flex items-center gap-2" @click="toggle('dispatches')" :class="showDispatches ? 'opacity-100' : 'opacity-40'">
-                                    <span class="h-2 w-2 rounded-full bg-emerald-400"></span>Dispatches
+                                    <span class="h-2 w-2 rounded-full bg-emerald-400"></span>Returns
                                 </button>
                             </div>
                         </div>
@@ -398,7 +398,7 @@
                                         <span class="h-2 w-2 rounded-full bg-blue-500"></span>Receipts
                                     </button>
                                     <button type="button" class="flex items-center gap-2" @click="toggle('dispatches')" :class="showDispatches ? 'opacity-100' : 'opacity-40'">
-                                        <span class="h-2 w-2 rounded-full bg-emerald-500"></span>Dispatches
+                                        <span class="h-2 w-2 rounded-full bg-emerald-500"></span>Returns
                                     </button>
                                 </div>
                             </div>
@@ -428,9 +428,9 @@
                         <p class="mt-1 text-xs text-slate-300">Posted receipts in 6 months</p>
                     </div>
                     <div class="rounded-xl bg-emerald-600 p-5 text-white shadow-sm stats-success-card">
-                        <p class="text-xs uppercase tracking-wide text-emerald-100">Dispatches Count</p>
+                        <p class="text-xs uppercase tracking-wide text-emerald-100">Returns Count</p>
                         <p class="mt-2 text-2xl font-semibold">{{ number_format($periodDispatchesTotal) }}</p>
-                        <p class="mt-1 text-xs text-emerald-100">Posted dispatches in 6 months</p>
+                        <p class="mt-1 text-xs text-emerald-100">Posted returns in 6 months</p>
                     </div>
                     <div class="rounded-xl bg-gradient-to-br from-slate-50 to-white p-5 shadow-sm ring-1 ring-gray-950/5 stats-panel dark:bg-slate-900 dark:ring-slate-700/40">
                         <p class="text-xs uppercase tracking-wide text-slate-700 dark:text-slate-200">Stock Health</p>

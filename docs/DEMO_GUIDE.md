@@ -16,7 +16,7 @@ Customers keep their own goods with you (bags, crates, weight). You:
 
 1. Receive goods into a chamber  
 2. Track where they sit  
-3. Dispatch (hand back) when the customer asks  
+3. Return (hand back) when the customer asks  
 4. Charge storage rent and collect payment  
 
 It is **not** a normal shop POS. Goods stay customer-owned until they leave.
@@ -30,7 +30,7 @@ Open **Dashboard**.
 
 Show:
 
-- Receiving / Dispatch packages  
+- Receiving / Return packages  
 - Stock on hand  
 - Billing due  
 - Chamber occupancy  
@@ -64,8 +64,8 @@ After post, stock appears on the dashboard.
 Enter a value outside chamber min/max.  
 It shows as out of range → appears on **Action alerts** → **Acknowledge** after checking.
 
-### 5) Dispatch (customer takes goods)
-**Goods dispatches → Create**
+### 5) Return (customer takes goods)
+**Return → Create**
 
 - Same customer  
 - Pick lots still in stock  

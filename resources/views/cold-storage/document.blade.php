@@ -1,7 +1,7 @@
 @php
     $documentTitle = match ($type) {
         'receipt' => 'Goods receipt',
-        'dispatch' => 'Gate pass',
+        'dispatch' => 'Return',
         default => 'Storage invoice',
     };
     $documentNumber = $record->receipt_no ?? $record->dispatch_no ?? $record->bill_no;
@@ -397,7 +397,7 @@
                             <div><span class="k">Vehicle</span><span class="v">{{ $record->vehicle_number ?: '—' }}</span></div>
                             <div><span class="k">Branch</span><span class="v">{{ $record->branch?->name ?: '—' }}</span></div>
                         @elseif ($type === 'dispatch')
-                            <div><span class="k">Dispatched on</span><span class="v">{{ $record->dispatched_on?->format('d/m/Y') ?: '—' }}</span></div>
+                            <div><span class="k">Returned on</span><span class="v">{{ $record->dispatched_on?->format('d/m/Y') ?: '—' }}</span></div>
                             <div><span class="k">Vehicle</span><span class="v">{{ $record->vehicle_number ?: '—' }}</span></div>
                             <div><span class="k">Branch</span><span class="v">{{ $record->branch?->name ?: '—' }}</span></div>
                         @else
@@ -465,11 +465,11 @@
                                 <td>{{ $line->chamber?->name }} {{ $line->location?->name }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="5" class="muted">No dispatch lines.</td></tr>
+                            <tr><td colspan="5" class="muted">No return lines.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
-                <div class="notes">This gate pass releases customer-owned goods. It is not a product sale.</div>
+                <div class="notes">This return releases customer-owned goods. It is not a product sale.</div>
             @else
                 <div class="section-title">Storage charges</div>
                 <table>

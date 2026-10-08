@@ -16,7 +16,7 @@ enum ColdStorageMovementType: string
     {
         return match ($this) {
             self::Receive => 'Receiving',
-            self::Dispatch => 'Dispatch',
+            self::Dispatch => 'Return',
             self::TransferIn => 'Transfer in',
             self::TransferOut => 'Transfer out',
             self::Damage => 'Damage',

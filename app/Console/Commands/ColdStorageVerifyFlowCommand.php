@@ -46,7 +46,7 @@ class ColdStorageVerifyFlowCommand extends Command
         $checks[] = ['Receiving: posted goods receipts', $receipts > 0, (string) $receipts];
 
         $dispatches = ColdStorageDispatch::query()->where('merchant_id', $merchant->id)->where('status', 'posted')->count();
-        $checks[] = ['Dispatch: posted withdrawals', $dispatches > 0, (string) $dispatches];
+        $checks[] = ['Return: posted withdrawals', $dispatches > 0, (string) $dispatches];
 
         $movements = ColdStorageMovement::query()->where('merchant_id', $merchant->id)->count();
         $checks[] = ['Ledger: stock movements exist', $movements > 0, (string) $movements];

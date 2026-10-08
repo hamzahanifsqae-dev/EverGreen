@@ -7,20 +7,20 @@ Plain-language situations the system is built for.
 **Goal:** Put customer bags into a chamber and know the lot number.
 
 **Steps:** Create customer → create goods receipt → allocate chamber → post receipt.  
-**Result:** Stock on hand increases; lot can be found later for dispatch or billing.
+**Result:** Stock on hand increases; lot can be found later for return or billing.
 
 ## UC-02 — Customer takes part of their stock
 **Actor:** Store operator  
 **Goal:** Hand over only some bags from a lot.
 
-**Steps:** Create dispatch → choose same customer + lot → enter quantity ≤ available → post.  
+**Steps:** Create return → choose same customer + lot → enter quantity ≤ available → post.  
 **Result:** Remaining stock stays; over-withdrawal is blocked.
 
 ## UC-03 — Wrong branch or wrong customer blocked
 **Actor:** System  
 **Goal:** Stop mistakes that mix stores or owners.
 
-**Examples:** Chamber from another branch on a receipt; dispatch for a different customer than the lot owner.  
+**Examples:** Chamber from another branch on a receipt; return for a different customer than the lot owner.  
 **Result:** Post fails with a clear error.
 
 ## UC-04 — Move bags inside the store
@@ -72,15 +72,15 @@ Plain-language situations the system is built for.
 **Steps:** Create reservation → Confirm → later Fulfill (link receipt) or Cancel with reason.  
 **Result:** Upcoming bookings appear on Action alerts (next 7 days).
 
-## UC-11 — Undo a wrong dispatch
+## UC-11 — Undo a wrong return
 **Actor:** Supervisor  
 **Goal:** Reverse a posted withdrawal.
 
-**Steps:** Open posted dispatch → Cancel with reason.  
-**Result:** Stock returns; document marked cancelled.
+**Steps:** Open posted return → Cancel with reason.  
+**Result:** Stock is restored; document marked cancelled.
 
 ## UC-12 — Keep cold storage separate from shop sales
 **Actor:** System  
 **Goal:** Customer-owned goods must not look like shop inventory sold.
 
-**Result:** Posting receipts/dispatches/bills does not create Sale or Purchase stock documents.
+**Result:** Posting receipts/returns/bills does not create Sale or Purchase stock documents.

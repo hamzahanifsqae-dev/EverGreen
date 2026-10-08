@@ -34,9 +34,11 @@ class ColdStorageDispatchResource extends ColdStorageResource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::Truck;
 
-    protected static ?string $navigationLabel = 'Dispatches';
+    protected static ?string $navigationLabel = 'Return';
 
-    protected static ?string $modelLabel = 'Dispatch';
+    protected static ?string $modelLabel = 'Return';
+
+    protected static ?string $pluralModelLabel = 'Return';
 
     protected static ?int $navigationSort = 3;
 
@@ -45,19 +47,19 @@ class ColdStorageDispatchResource extends ColdStorageResource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Gate pass')
+            Section::make('Return')
                 ->columns(3)
                 ->columnSpanFull()
                 ->schema([
                     TextInput::make('dispatch_no')
-                        ->label('Dispatch number')
+                        ->label('Return number')
                         ->default(fn (): string => 'GD-'.date('Ymd').'-'.strtoupper(substr(uniqid(), -6)))
                         ->required()
                         ->unique(ignoreRecord: true)
                         ->disabled()
                         ->dehydrated(),
                     DatePicker::make('dispatched_on')
-                        ->label('Dispatch date')
+                        ->label('Return date')
                         ->default(now())
                         ->required()
                         ->displayFormat('d/m/Y')
@@ -142,12 +144,12 @@ class ColdStorageDispatchResource extends ColdStorageResource
     public static function infolist(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Dispatch')
+            Section::make('Return')
                 ->columns(3)
                 ->columnSpanFull()
                 ->schema([
-                    TextEntry::make('dispatch_no')->label('Dispatch number'),
-                    TextEntry::make('dispatched_on')->date('d/m/Y'),
+                    TextEntry::make('dispatch_no')->label('Return number'),
+                    TextEntry::make('dispatched_on')->label('Return date')->date('d/m/Y'),
                     TextEntry::make('status')->badge(),
                     TextEntry::make('branch.name')->label('Branch'),
                     TextEntry::make('customer.name')->label('Customer'),
@@ -175,8 +177,8 @@ class ColdStorageDispatchResource extends ColdStorageResource
     public static function table(Table $table): Table
     {
         return $table->columns([
-            TextColumn::make('dispatch_no')->label('Dispatch')->searchable()->sortable(),
-            TextColumn::make('dispatched_on')->date('d/m/Y')->sortable(),
+            TextColumn::make('dispatch_no')->label('Return')->searchable()->sortable(),
+            TextColumn::make('dispatched_on')->label('Return date')->date('d/m/Y')->sortable(),
             TextColumn::make('branch.name')->label('Branch')->toggleable(),
             TextColumn::make('customer.name')->label('Customer')->searchable(),
             TextColumn::make('recipient_name')->label('Recipient'),
