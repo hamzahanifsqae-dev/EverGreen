@@ -8,6 +8,7 @@ use App\Models\Business;
 use App\Models\User;
 use App\Services\ColdStorage\ReportService;
 use App\Support\ColdStorageAccess;
+use App\Support\UiModules;
 use BackedEnum;
 use Filament\Forms\Components\Select;
 use Filament\Pages\Dashboard\Concerns\HasFiltersForm;
@@ -40,7 +41,8 @@ class ColdStorageLotAgeing extends Page
 
     public static function canAccess(): bool
     {
-        return ColdStorageAccess::can('view');
+        return UiModules::enabled('cold_storage_lot_ageing')
+            && ColdStorageAccess::can('view');
     }
 
     public function persistsFiltersInSession(): bool
