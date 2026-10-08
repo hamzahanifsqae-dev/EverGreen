@@ -8,7 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::getConnection()->getDriverName() === 'sqlite') {
+        $driver = Schema::getConnection()->getDriverName();
+
+        if ($driver === 'sqlite' || $driver === 'mysql') {
             DB::table('products')->where('unit', 'pieces')->update(['unit' => 'pcs']);
 
             return;
@@ -46,7 +48,9 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (Schema::getConnection()->getDriverName() === 'sqlite') {
+        $driver = Schema::getConnection()->getDriverName();
+
+        if ($driver === 'sqlite' || $driver === 'mysql') {
             DB::table('products')->where('unit', 'pcs')->update(['unit' => 'pieces']);
 
             return;
