@@ -105,6 +105,7 @@ class ColdStorageStatsWidget extends Widget
 
         $dueAmount = (float) (clone $billQuery)->sum('due_amount');
         $billedAmount = (float) (clone $billQuery)->sum('total_amount');
+        $paidAmount = (float) (clone $billQuery)->sum('paid_amount');
         $receiptsPosted = (clone $receiptQuery)->where('status', 'posted')->count();
         $dispatchesPosted = (clone $dispatchQuery)->where('status', 'posted')->count();
         $receiptsDraft = (clone $receiptQuery)->where('status', 'draft')->count();
@@ -132,6 +133,7 @@ class ColdStorageStatsWidget extends Widget
                 'dispatch_packages' => $dispatchPackages,
                 'bills_due' => (clone $billQuery)->where('due_amount', '>', 0)->count(),
                 'due_amount' => $dueAmount,
+                'paid_amount' => $paidAmount,
                 'billed_amount' => $billedAmount,
                 'temp_exceptions' => $tempExceptions,
                 'action_alerts_open' => $actionAlertsOpen,
@@ -174,6 +176,7 @@ class ColdStorageStatsWidget extends Widget
             'dispatch_packages' => 0.0,
             'bills_due' => 0,
             'due_amount' => 0.0,
+            'paid_amount' => 0.0,
             'billed_amount' => 0.0,
             'temp_exceptions' => 0,
             'action_alerts_open' => null,

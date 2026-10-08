@@ -150,10 +150,15 @@
                         <span class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-600 dark:bg-amber-900/40 dark:text-amber-200">Charges</span>
                     </div>
                     <p class="mt-4 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ $currency }} {{ number_format((float) ($stats['due_amount'] ?? 0), 2) }}</p>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Outstanding due</p>
                     <div class="mt-4 space-y-2 text-sm text-slate-700 dark:text-slate-300">
                         <div class="flex items-center justify-between">
                             <span>Bills with balance</span>
                             <span class="font-medium text-slate-900 dark:text-slate-100">{{ number_format($stats['bills_due'] ?? 0) }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span>Collected</span>
+                            <span class="font-medium text-slate-900 dark:text-slate-100">{{ $currency }} {{ number_format((float) ($stats['paid_amount'] ?? 0), 2) }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span>Billed amount</span>
