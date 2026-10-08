@@ -35,7 +35,7 @@ class ViewColdStorageBill extends ViewRecord
                     }
                 }),
             ColdStorageActions::post(BillingService::class),
-            ColdStorageActions::print('bill'),
+            ColdStorageActions::invoice(),
             ColdStorageActions::cancel(BillingService::class),
         ];
     }

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ColdStorageBills;
 use App\Enums\ColdStorageChargeBasis;
 use App\Enums\ColdStorageChargePeriod;
 use App\Enums\ColdStorageServiceBasis;
+use App\Filament\ColdStorage\ColdStorageActions;
 use App\Filament\Resources\ColdStorage\ColdStorageResource;
 use App\Filament\Resources\ColdStorageBills\Pages\CreateColdStorageBill;
 use App\Filament\Resources\ColdStorageBills\Pages\EditColdStorageBill;
@@ -188,6 +189,7 @@ class ColdStorageBillResource extends ColdStorageResource
             ViewAction::make(),
             EditAction::make()
                 ->visible(fn (ColdStorageBill $record): bool => static::canEdit($record)),
+            ColdStorageActions::invoice(),
         ])->defaultSort('period_start', 'desc');
     }
 

@@ -24,6 +24,10 @@ class ColdStorageDocumentController
 
         $this->authorizeRecord($record);
 
+        if ($type === 'bill') {
+            abort_unless(($record->status ?? null) === 'posted', 403);
+        }
+
         return view('cold-storage.document', [
             'type' => $type,
             'record' => $record,

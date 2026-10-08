@@ -13,9 +13,9 @@
     </style>
 </head>
 <body>
-    <button class="no-print" onclick="window.print()">Print</button>
+    <button class="no-print" onclick="window.print()">{{ $type === 'bill' ? 'Print invoice' : 'Print' }}</button>
     <h1>
-        @if ($type === 'receipt') Goods receipt @elseif ($type === 'dispatch') Gate pass @else Storage bill @endif
+        @if ($type === 'receipt') Goods receipt @elseif ($type === 'dispatch') Gate pass @else Storage invoice @endif
     </h1>
     <p class="meta">
         {{ $record->merchant?->name }} · {{ $record->business?->name }} · {{ $record->branch?->name }}<br>
@@ -62,7 +62,11 @@
         </table>
         <p>This gate pass releases customer-owned goods. It is not a product sale.</p>
     @else
-        <p>Bill {{ $record->bill_no }} · {{ $record->period_start?->format('d/m/Y') }} to {{ $record->period_end?->format('d/m/Y') }}</p>
+        <p>
+            Invoice {{ $record->bill_no }}
+            · {{ $record->period_start?->format('d/m/Y') }} to {{ $record->period_end?->format('d/m/Y') }}
+            · {{ ucfirst((string) $record->charge_basis) }} / {{ ucfirst((string) $record->charge_period) }}
+        </p>
         <table>
             <thead><tr><th>Lot</th><th>Period</th><th>Quantity-days</th><th>Rate</th><th>Total</th></tr></thead>
             <tbody>
@@ -83,7 +87,13 @@
             @endforeach
             </tbody>
         </table>
-        <p>Total {{ $currency }} {{ number_format((float) $record->total_amount, 2) }} · Due {{ $currency }} {{ number_format((float) $record->due_amount, 2) }}</p>
+        <p>
+            Storage {{ $currency }} {{ number_format((float) $record->storage_total, 2) }}
+            · Services {{ $currency }} {{ number_format((float) $record->service_total, 2) }}
+            · Total {{ $currency }} {{ number_format((float) $record->total_amount, 2) }}
+            · Paid {{ $currency }} {{ number_format((float) $record->paid_amount, 2) }}
+            · Due {{ $currency }} {{ number_format((float) $record->due_amount, 2) }}
+        </p>
     @endif
 </body>
 </html>

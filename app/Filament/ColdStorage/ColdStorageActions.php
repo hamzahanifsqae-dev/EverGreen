@@ -68,4 +68,15 @@ class ColdStorageActions
             ->url(fn ($record): string => route('cold-storage.print', ['type' => $type, 'id' => $record->getKey()]))
             ->openUrlInNewTab();
     }
+
+    public static function invoice(): Action
+    {
+        return Action::make('invoiceDocument')
+            ->label('Invoice')
+            ->icon('heroicon-o-document-text')
+            ->color('gray')
+            ->visible(fn ($record): bool => ($record->status ?? null) === 'posted')
+            ->url(fn ($record): string => route('cold-storage.print', ['type' => 'bill', 'id' => $record->getKey()]))
+            ->openUrlInNewTab();
+    }
 }
