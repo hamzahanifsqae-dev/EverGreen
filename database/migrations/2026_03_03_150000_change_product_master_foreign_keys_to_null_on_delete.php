@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -12,15 +12,29 @@ return new class extends Migration
             return;
         }
 
-        DB::statement('ALTER TABLE products DROP CONSTRAINT IF EXISTS products_category_id_foreign');
-        DB::statement('ALTER TABLE products DROP CONSTRAINT IF EXISTS products_sub_category_id_foreign');
-        DB::statement('ALTER TABLE products DROP CONSTRAINT IF EXISTS products_brand_id_foreign');
-        DB::statement('ALTER TABLE products DROP CONSTRAINT IF EXISTS products_brand_model_id_foreign');
+        $this->dropProductForeignKeys();
 
-        DB::statement('ALTER TABLE products ADD CONSTRAINT products_category_id_foreign FOREIGN KEY (category_id) REFERENCES categories(id) ON UPDATE CASCADE ON DELETE SET NULL');
-        DB::statement('ALTER TABLE products ADD CONSTRAINT products_sub_category_id_foreign FOREIGN KEY (sub_category_id) REFERENCES categories(id) ON UPDATE CASCADE ON DELETE SET NULL');
-        DB::statement('ALTER TABLE products ADD CONSTRAINT products_brand_id_foreign FOREIGN KEY (brand_id) REFERENCES brands(id) ON UPDATE CASCADE ON DELETE SET NULL');
-        DB::statement('ALTER TABLE products ADD CONSTRAINT products_brand_model_id_foreign FOREIGN KEY (brand_model_id) REFERENCES brand_models(id) ON UPDATE CASCADE ON DELETE SET NULL');
+        Schema::table('products', function (Blueprint $table) {
+            $table->foreign('category_id')
+                ->references('id')->on('categories')
+                ->cascadeOnUpdate()
+                ->nullOnDelete();
+
+            $table->foreign('sub_category_id')
+                ->references('id')->on('categories')
+                ->cascadeOnUpdate()
+                ->nullOnDelete();
+
+            $table->foreign('brand_id')
+                ->references('id')->on('brands')
+                ->cascadeOnUpdate()
+                ->nullOnDelete();
+
+            $table->foreign('brand_model_id')
+                ->references('id')->on('brand_models')
+                ->cascadeOnUpdate()
+                ->nullOnDelete();
+        });
     }
 
     public function down(): void
@@ -28,14 +42,42 @@ return new class extends Migration
         if (Schema::getConnection()->getDriverName() === 'sqlite') {
             return;
         }
-        DB::statement('ALTER TABLE products DROP CONSTRAINT IF EXISTS products_category_id_foreign');
-        DB::statement('ALTER TABLE products DROP CONSTRAINT IF EXISTS products_sub_category_id_foreign');
-        DB::statement('ALTER TABLE products DROP CONSTRAINT IF EXISTS products_brand_id_foreign');
-        DB::statement('ALTER TABLE products DROP CONSTRAINT IF EXISTS products_brand_model_id_foreign');
 
-        DB::statement('ALTER TABLE products ADD CONSTRAINT products_category_id_foreign FOREIGN KEY (category_id) REFERENCES categories(id) ON UPDATE CASCADE ON DELETE CASCADE');
-        DB::statement('ALTER TABLE products ADD CONSTRAINT products_sub_category_id_foreign FOREIGN KEY (sub_category_id) REFERENCES categories(id) ON UPDATE CASCADE ON DELETE CASCADE');
-        DB::statement('ALTER TABLE products ADD CONSTRAINT products_brand_id_foreign FOREIGN KEY (brand_id) REFERENCES brands(id) ON UPDATE CASCADE ON DELETE CASCADE');
-        DB::statement('ALTER TABLE products ADD CONSTRAINT products_brand_model_id_foreign FOREIGN KEY (brand_model_id) REFERENCES brand_models(id) ON UPDATE CASCADE ON DELETE CASCADE');
+        $this->dropProductForeignKeys();
+
+        Schema::table('products', function (Blueprint $table) {
+            $table->foreign('category_id')
+                ->references('id')->on('categories')
+                ->cascadeOnUpdate()
+                ->cascadeOnDelete();
+
+            $table->foreign('sub_category_id')
+                ->references('id')->on('categories')
+                ->cascadeOnUpdate()
+                ->cascadeOnDelete();
+
+            $table->foreign('brand_id')
+                ->references('id')->on('brands')
+                ->cascadeOnUpdate()
+                ->cascadeOnDelete();
+
+            $table->foreign('brand_model_id')
+                ->references('id')->on('brand_models')
+                ->cascadeOnUpdate()
+                ->cascadeOnDelete();
+        });
+    }
+
+    private function dropProductForeignKeys(): void
+    {
+        Schema::table('products', function (Blueprint $table) {
+            foreach (['category_id', 'sub_category_id', 'brand_id', 'brand_model_id'] as $column) {
+                try {
+                    $table->dropForeign([$column]);
+                } catch (\Throwable) {
+                    // Foreign key may already be absent on some drivers/environments.
+                }
+            }
+        });
     }
 };
