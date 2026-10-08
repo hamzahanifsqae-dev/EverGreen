@@ -18,7 +18,7 @@ return [
 
     'session_timeout_minutes' => (int) env('DEMO_SESSION_TIMEOUT', 30),
 
-    'merchant_name' => env('DEMO_MERCHANT_NAME', 'Flowdesk Demo Store'),
+    'merchant_name' => env('DEMO_MERCHANT_NAME', 'EverGreen Cold Storage Demo'),
 
     'temporary_email_domain' => env('DEMO_TEMPORARY_EMAIL_DOMAIN', 'crmdemo.com'),
 

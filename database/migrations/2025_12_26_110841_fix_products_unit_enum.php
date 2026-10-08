@@ -2,25 +2,29 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
-
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
-        // 1. Drop old constraint
+        if (Schema::getConnection()->getDriverName() === 'sqlite') {
+            DB::table('products')->where('unit', 'pieces')->update(['unit' => 'pcs']);
+
+            return;
+        }
+
         DB::statement('
             ALTER TABLE products
             DROP CONSTRAINT IF EXISTS products_unit_check
         ');
 
-        // 2. Normalize existing data
         DB::statement("
             UPDATE products
             SET unit = 'pcs'
             WHERE unit = 'pieces'
         ");
 
-        // 3. Add new constraint
         DB::statement("
             ALTER TABLE products
             ADD CONSTRAINT products_unit_check
@@ -42,13 +46,17 @@ return new class extends Migration {
 
     public function down(): void
     {
-        // rollback constraint
+        if (Schema::getConnection()->getDriverName() === 'sqlite') {
+            DB::table('products')->where('unit', 'pcs')->update(['unit' => 'pieces']);
+
+            return;
+        }
+
         DB::statement('
             ALTER TABLE products
             DROP CONSTRAINT IF EXISTS products_unit_check
         ');
 
-        // rollback data
         DB::statement("
             UPDATE products
             SET unit = 'pieces'

@@ -39,6 +39,7 @@ class PermissionsModulesSeeder extends Seeder
             'reports' => 'Reports',
             'payrolls' => 'Payrolls',
             'invoice_templates' => 'Invoice Templates',
+            'cold_storage' => 'Cold Storage',
         ];
 
         foreach ($modules as $key => $label) {

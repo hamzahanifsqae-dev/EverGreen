@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\SaleReturns;
 
+use App\Filament\Concerns\HasUiModuleVisibility;
 use App\Filament\Resources\SaleReturns\Pages\CreateSaleReturn;
 use App\Filament\Resources\SaleReturns\Pages\EditSaleReturn;
 use App\Filament\Resources\SaleReturns\Pages\ListSaleReturns;
@@ -18,6 +19,13 @@ use Filament\Tables\Table;
 
 class SaleReturnResource extends Resource
 {
+    use HasUiModuleVisibility;
+
+    protected static function uiModuleKey(): ?string
+    {
+        return 'sale_returns';
+    }
+
     protected static ?string $model = SaleReturn::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::ArrowUturnRight;
@@ -66,8 +74,8 @@ class SaleReturnResource extends Resource
     {
         return [
             'index' => ListSaleReturns::route('/'),
-           // 'create' => CreateSaleReturn::route('/create'),
-           // 'edit' => EditSaleReturn::route('/{record}/edit'),
+            // 'create' => CreateSaleReturn::route('/create'),
+            // 'edit' => EditSaleReturn::route('/{record}/edit'),
         ];
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Merchants;
 
+use App\Filament\Concerns\HasUiModuleVisibility;
 use App\Filament\Resources\Merchants\Pages\CreateMerchant;
 use App\Filament\Resources\Merchants\Pages\EditMerchant;
 use App\Filament\Resources\Merchants\Pages\ListMerchants;
@@ -10,14 +11,21 @@ use App\Filament\Resources\Merchants\Tables\MerchantsTable;
 use App\Models\Merchant;
 use BackedEnum;
 use Filament\Facades\Filament;
-use Illuminate\Database\Eloquent\Builder;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class MerchantResource extends Resource
 {
+    use HasUiModuleVisibility;
+
+    protected static function uiModuleKey(): ?string
+    {
+        return 'merchants';
+    }
+
     protected static ?string $model = Merchant::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::BuildingStorefront;
@@ -57,11 +65,11 @@ class MerchantResource extends Resource
         ];
     }
 
-//    public static function getEloquentQuery(): Builder
-//    {
-//        return parent::getEloquentQuery()
-//            ->with('profilePhoto');
-//    }
+    //    public static function getEloquentQuery(): Builder
+    //    {
+    //        return parent::getEloquentQuery()
+    //            ->with('profilePhoto');
+    //    }
     public static function getPages(): array
     {
         return [

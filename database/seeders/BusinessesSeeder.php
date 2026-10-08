@@ -13,7 +13,7 @@ class BusinessesSeeder extends Seeder
 {
     public function run(): void
     {
-        $primaryMerchant = Merchant::where('email', 'info@flowdesk.com')->first();
+        $primaryMerchant = Merchant::where('email', 'info@evergreen.com')->first();
         $halaynoor = Merchant::where('email', 'info@halaynoor.com')->first();
 
         $pakistan = Country::where('code', 'PK')->first();

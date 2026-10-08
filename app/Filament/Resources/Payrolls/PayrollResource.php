@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Payrolls;
 
+use App\Filament\Concerns\HasUiModuleVisibility;
 use App\Filament\Resources\Payrolls\Pages\CreatePayroll;
 use App\Filament\Resources\Payrolls\Pages\EditPayroll;
 use App\Filament\Resources\Payrolls\Pages\ListPayrolls;
@@ -9,6 +10,7 @@ use App\Filament\Resources\Payrolls\Pages\ViewPayroll;
 use App\Filament\Resources\Payrolls\Schemas\PayrollForm;
 use App\Filament\Resources\Payrolls\Schemas\PayrollInfolist;
 use App\Filament\Resources\Payrolls\Tables\PayrollsTable;
+use App\Models\Merchant;
 use App\Models\Payroll;
 use App\Models\PermissionModule;
 use BackedEnum;
@@ -17,9 +19,17 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class PayrollResource extends Resource
 {
+    use HasUiModuleVisibility;
+
+    protected static function uiModuleKey(): ?string
+    {
+        return 'payrolls';
+    }
+
     protected static ?string $model = Payroll::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::CurrencyDollar;
@@ -91,14 +101,13 @@ class PayrollResource extends Resource
         );
     }
 
-    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    public static function getEloquentQuery(): Builder
     {
         $user = Filament::auth()->user();
         $query = parent::getEloquentQuery();
 
-
         // Merchants see all payrolls for their staff
-        if ($user instanceof \App\Models\Merchant) {
+        if ($user instanceof Merchant) {
             return $query->where('merchant_id', $user->id);
         }
 

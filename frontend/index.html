@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EverGreen Cold Storage</title>
+  <meta name="description" content="Customer-owned cold storage management — receipts, dispatch, billing, and chamber monitoring." />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <style>
+    :root {
+      --teal: #0f766e;
+      --teal-deep: #115e59;
+      --mint: #14b8a6;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --paper: #f8fafc;
+      --line: #e2e8f0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", ui-sans-serif, system-ui, -apple-system, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(20, 184, 166, 0.18), transparent 60%),
+        radial-gradient(900px 500px at 100% 0%, rgba(15, 118, 110, 0.16), transparent 55%),
+        linear-gradient(180deg, #ffffff 0%, var(--paper) 100%);
+    }
+    .wrap {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 48px 24px 64px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 48px;
+    }
+    .mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--mint), var(--teal-deep));
+      box-shadow: 0 10px 30px -12px rgba(15, 118, 110, 0.7);
+    }
+    .brand strong {
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+    }
+    h1 {
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      margin: 0 0 16px;
+      max-width: 14ch;
+    }
+    .lead {
+      font-size: 1.125rem;
+      line-height: 1.6;
+      color: var(--muted);
+      max-width: 38rem;
+      margin: 0 0 28px;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+    a.btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+    a.btn:hover { transform: translateY(-1px); }
+    a.primary {
+      color: #fff;
+      background: var(--teal);
+      box-shadow: 0 12px 28px -14px rgba(15, 118, 110, 0.9);
+    }
+    a.primary:hover { background: var(--teal-deep); }
+    a.ghost {
+      color: var(--teal-deep);
+      background: rgba(15, 118, 110, 0.08);
+      border: 1px solid rgba(15, 118, 110, 0.18);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+    }
+    .card {
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 14px;
+      padding: 16px 18px;
+    }
+    .card h3 {
+      margin: 0 0 6px;
+      font-size: 0.98rem;
+    }
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+    footer {
+      margin-top: 48px;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.1em 0.35em;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">
+      <div class="mark" aria-hidden="true"></div>
+      <strong>EverGreen Cold Storage</strong>
+    </div>
+
+    <h1>Cold storage operations, without shop POS confusion.</h1>
+    <p class="lead">
+      Receive customer-owned goods, track chambers and lots, dispatch cleanly,
+      and bill storage rent — all in one merchant panel.
+    </p>
+
+    <div class="actions">
+      <a class="btn primary" id="app-login" href="https://REPLACE_WITH_RAILWAY_URL/merchant/login">
+        Open merchant panel
+      </a>
+      <a class="btn ghost" href="https://REPLACE_WITH_RAILWAY_URL/merchant/login">
+        Staff / merchant login
+      </a>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Goods in &amp; out</h3>
+        <p>Receipts, partial dispatch, transfers, and damage adjustments with stock safety checks.</p>
+      </div>
+      <div class="card">
+        <h3>Billing</h3>
+        <p>Rate cards and one-click bills from remaining stock for any date period.</p>
+      </div>
+      <div class="card">
+        <h3>Chamber health</h3>
+        <p>Temperature alerts, capacity heatmap, lot ageing, and reservations.</p>
+      </div>
+    </div>
+
+    <footer>
+      Demo login after deploy: <code>info@evergreen.com</code> · Frontend on Vercel · API/app on Railway
+    </footer>
+  </div>
+
+  <script>
+    // Optional: override from Vercel env injected at build time via meta tag later
+    window.EVERGREEN_APP_URL = window.EVERGREEN_APP_URL || null;
+    if (window.EVERGREEN_APP_URL) {
+      document.querySelectorAll('#app-login, a.ghost').forEach((el) => {
+        el.href = window.EVERGREEN_APP_URL.replace(/\/$/, '') + '/merchant/login';
+      });
+    }
+  </script>
+</body>
+</html>

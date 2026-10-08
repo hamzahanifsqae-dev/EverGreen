@@ -9,6 +9,7 @@ use App\Filament\Resources\MerchantSettings\Schemas\MerchantSettingForm;
 use App\Filament\Resources\MerchantSettings\Tables\MerchantSettingsTable;
 use App\Models\MerchantSetting;
 use App\Models\PermissionModule;
+use App\Support\UiModules;
 use BackedEnum;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
@@ -21,13 +22,15 @@ class MerchantSettingResource extends Resource
     protected static ?string $model = MerchantSetting::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::Cog8Tooth;
-//    protected static bool $shouldRegisterNavigation = false;
+
+    //    protected static bool $shouldRegisterNavigation = false;
     protected static string|\UnitEnum|null $navigationGroup = 'Configurations';
 
     protected static ?string $navigationLabel = 'Merchant Settings';
-    protected static ?string $modelLabel = 'Merchant Settings';
-    protected static ?string $pluralModelLabel = 'Merchant Settings';
 
+    protected static ?string $modelLabel = 'Merchant Settings';
+
+    protected static ?string $pluralModelLabel = 'Merchant Settings';
 
     protected static ?string $recordTitleAttribute = 'MerchantSetting';
 
@@ -53,7 +56,8 @@ class MerchantSettingResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return Filament::getCurrentPanel()?->getId() === 'merchant';
+        return UiModules::enabled('merchant_settings')
+            && Filament::getCurrentPanel()?->getId() === 'merchant';
     }
 
     public static function form(Schema $schema): Schema

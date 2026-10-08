@@ -8,7 +8,10 @@ use App\Filament\Resources\InvoiceDynamicFields\Pages\ListInvoiceDynamicFields;
 use App\Filament\Resources\InvoiceDynamicFields\Schemas\InvoiceDynamicFieldForm;
 use App\Filament\Resources\InvoiceDynamicFields\Tables\InvoiceDynamicFieldsTable;
 use App\Models\InvoiceDynamicGroup;
+use App\Models\Merchant;
 use App\Models\PermissionModule;
+use App\Models\User;
+use App\Support\UiModules;
 use BackedEnum;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
@@ -20,20 +23,24 @@ use Illuminate\Database\Eloquent\Builder;
 class InvoiceDynamicFieldResource extends Resource
 {
     protected static ?string $model = InvoiceDynamicGroup::class;
+
     protected static ?string $slug = 'invoice-templates';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::DocumentText;
+
     protected static string|\UnitEnum|null $navigationGroup = 'Configurations';
 
     protected static ?string $navigationLabel = 'Invoice Templates';
+
     protected static ?string $modelLabel = 'Invoice Template';
+
     protected static ?string $pluralModelLabel = 'Invoice Templates';
+
     protected static ?int $navigationSort = 7;
 
     public static function canViewAny(): bool
     {
         $user = Filament::auth()->user();
-
 
         $guard = Filament::getCurrentPanel()->getAuthGuard();
 
@@ -86,7 +93,8 @@ class InvoiceDynamicFieldResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return in_array(Filament::getCurrentPanel()?->getId(), ['merchant', 'user'], true);
+        return UiModules::enabled('invoice_dynamic_fields')
+            && in_array(Filament::getCurrentPanel()?->getId(), ['merchant', 'user'], true);
     }
 
     public static function getEloquentQuery(): Builder
@@ -94,11 +102,11 @@ class InvoiceDynamicFieldResource extends Resource
         $query = parent::getEloquentQuery();
         $user = Filament::auth()->user();
 
-        if ($user instanceof \App\Models\Merchant) {
+        if ($user instanceof Merchant) {
             return $query->where('merchant_id', $user->id);
         }
 
-        if ($user instanceof \App\Models\User && $user->merchant_id) {
+        if ($user instanceof User && $user->merchant_id) {
             return $query->where('merchant_id', $user->merchant_id);
         }
 
@@ -133,11 +141,11 @@ class InvoiceDynamicFieldResource extends Resource
     {
         $user = Filament::auth()->user();
 
-        if ($user instanceof \App\Models\Merchant) {
+        if ($user instanceof Merchant) {
             return $user->id;
         }
 
-        if ($user instanceof \App\Models\User) {
+        if ($user instanceof User) {
             return $user->merchant_id;
         }
 

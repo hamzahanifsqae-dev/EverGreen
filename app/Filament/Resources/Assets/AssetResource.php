@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Assets;
 
+use App\Filament\Concerns\HasUiModuleVisibility;
 use App\Filament\Resources\Assets\Pages\CreateAsset;
 use App\Filament\Resources\Assets\Pages\EditAsset;
 use App\Filament\Resources\Assets\Pages\ListAssets;
@@ -23,6 +24,13 @@ use Illuminate\Database\Eloquent\Builder;
 
 class AssetResource extends Resource
 {
+    use HasUiModuleVisibility;
+
+    protected static function uiModuleKey(): ?string
+    {
+        return 'assets';
+    }
+
     protected static ?string $model = Asset::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::Cube;

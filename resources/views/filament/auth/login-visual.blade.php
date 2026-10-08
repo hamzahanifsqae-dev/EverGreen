@@ -1,24 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 640" role="img" aria-hidden="true" class="flowdesk-login-visual">
   <defs>
     <linearGradient id="flowdesk-login-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="0%" stop-color="#f0fdf4"/>
       <stop offset="50%" stop-color="#ffffff"/>
-      <stop offset="100%" stop-color="#eef2ff"/>
+      <stop offset="100%" stop-color="#ecfeff"/>
     </linearGradient>
     <linearGradient id="flowdesk-login-mark" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#6366f1"/>
-      <stop offset="100%" stop-color="#4f46e5"/>
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#0f766e"/>
     </linearGradient>
     <linearGradient id="flowdesk-login-line" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#6366f1" stop-opacity="0"/>
-      <stop offset="50%" stop-color="#6366f1" stop-opacity="0.3"/>
-      <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#0f766e" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#0f766e" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#0f766e" stop-opacity="0"/>
     </linearGradient>
     <clipPath id="flowdesk-login-stage-clip">
       <rect width="720" height="640" rx="24"/>
-    </clipPath>
-    <clipPath id="flowdesk-login-box-clip">
-      <rect x="-28" y="-72" width="56" height="56" rx="14"/>
     </clipPath>
   </defs>
 
@@ -26,34 +23,36 @@
 
   <g clip-path="url(#flowdesk-login-stage-clip)" class="flowdesk-login-visual__stage">
     <g class="flowdesk-login-visual__blob flowdesk-login-visual__blob--1">
-      <circle cx="360" cy="320" r="200" fill="#eef2ff" opacity="0.45"/>
+      <circle cx="360" cy="320" r="200" fill="#ccfbf1" opacity="0.4"/>
     </g>
     <g class="flowdesk-login-visual__blob flowdesk-login-visual__blob--2">
-      <circle cx="120" cy="100" r="70" fill="#c7d2fe" opacity="0.2"/>
+      <circle cx="120" cy="100" r="70" fill="#a7f3d0" opacity="0.22"/>
     </g>
     <g class="flowdesk-login-visual__blob flowdesk-login-visual__blob--3">
-      <circle cx="600" cy="540" r="90" fill="#ddd6fe" opacity="0.18"/>
+      <circle cx="600" cy="540" r="90" fill="#99f6e4" opacity="0.2"/>
     </g>
   </g>
 
-  <g transform="translate(360 290)">
+  <g transform="translate(360 286)">
     <g class="flowdesk-login-visual__mark">
-      <rect x="-28" y="-72" width="56" height="56" rx="14" fill="url(#flowdesk-login-mark)"/>
-
-      <g clip-path="url(#flowdesk-login-box-clip)">
-        <rect class="flowdesk-login-visual__shimmer" x="-56" y="-72" width="18" height="56" fill="#ffffff" opacity="0.16"/>
-
-        <line class="flowdesk-login-visual__bar flowdesk-login-visual__bar--1" x1="-12" y1="-52" x2="20" y2="-52" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round"/>
-        <line class="flowdesk-login-visual__bar flowdesk-login-visual__bar--2" x1="-12" y1="-44" x2="12" y2="-44" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round"/>
-        <line class="flowdesk-login-visual__bar flowdesk-login-visual__bar--3" x1="-12" y1="-36" x2="8" y2="-36" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round"/>
-
-        <circle class="flowdesk-login-visual__dot" cx="-12" cy="-44" r="2.5" fill="#ffffff"/>
+      <rect x="-32" y="-78" width="64" height="64" rx="16" fill="url(#flowdesk-login-mark)"/>
+      <g fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" transform="translate(-32 -78)">
+        <path d="M32 12v40"/>
+        <path d="M14 32h36"/>
+        <path d="M18.5 18.5l27 27"/>
+        <path d="M45.5 18.5l-27 27"/>
+        <path d="M32 18l-3.2-3.2M32 18l3.2-3.2"/>
+        <path d="M32 46l-3.2 3.2M32 46l3.2 3.2"/>
+        <path d="M18 32l-3.2-3.2M18 32l-3.2 3.2"/>
+        <path d="M46 32l3.2-3.2M46 32l3.2 3.2"/>
       </g>
+      <path d="M18 -28c3.2-4.2 2.2-9-.4-10-2.8 1.5-4.5 5.6-2 9.4.7 1.1 1.8 1.4 2.4.6z" fill="#d1fae5"/>
     </g>
 
-    <text y="24" text-anchor="middle" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="48" font-weight="700" letter-spacing="-0.025em" fill="#0f172a">Flowdesk</text>
+    <text y="20" text-anchor="middle" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="36" font-weight="700" letter-spacing="-0.025em" fill="#0f172a">EverGreen</text>
+    <text y="52" text-anchor="middle" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="18" font-weight="600" letter-spacing="0.02em" fill="#0f766e">Cold Storage</text>
 
-    <line x1="-88" y1="48" x2="88" y2="48" stroke="url(#flowdesk-login-line)" stroke-width="1"/>
-    <text y="78" text-anchor="middle" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="14" font-weight="500" letter-spacing="0.06em" fill="#64748b">CRM · POS · INVENTORY</text>
+    <line x1="-100" y1="72" x2="100" y2="72" stroke="url(#flowdesk-login-line)" stroke-width="1"/>
+    <text y="96" text-anchor="middle" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="13" font-weight="500" letter-spacing="0.06em" fill="#64748b">WAREHOUSE · BILLING · OPERATIONS</text>
   </g>
 </svg>

@@ -534,43 +534,11 @@ body.fi-panel-user .fi-main-ctn .fi-ta-ctn .fi-ta-content-ctn {
     gap: 8px;
 }
 
-.flowdesk-auth-layout .fi-logo {
-    align-self: center;
-    height: auto !important;
-    margin-bottom: 16px;
-    color: #6366f1;
-    font-size: 24px;
-    font-weight: 800;
-    letter-spacing: 0;
-    line-height: 1.1;
-    text-transform: uppercase;
-}
-
-.flowdesk-auth-layout img.fi-logo {
-    width: auto;
-    max-width: 180px;
-    max-height: 64px;
-    object-fit: contain;
-}
-
+.flowdesk-auth-layout .fi-simple-header .fi-logo,
+.flowdesk-auth-layout .fi-logo,
+.flowdesk-auth-layout img.fi-logo,
 .flowdesk-auth-layout .flowdesk-auth-logo {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    color: #6366f1;
-}
-
-.flowdesk-auth-layout .flowdesk-auth-logo svg {
-    width: 64px;
-    height: 52px;
-    display: block;
-}
-
-.flowdesk-auth-layout .flowdesk-auth-logo strong {
-    color: #6366f1;
-    font-size: 20px;
-    line-height: 1;
+    display: none !important;
 }
 
 .flowdesk-auth-layout .fi-simple-header-heading {
@@ -671,8 +639,8 @@ body.fi-panel-user .fi-main-ctn .fi-ta-ctn .fi-ta-content-ctn {
 }
 
 .flowdesk-auth-layout .fi-input-wrp:focus-within {
-    border-color: #6366f1 !important;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
+    border-color: #0f766e !important;
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.2) !important;
 }
 
 .flowdesk-auth-layout .fi-input-wrp.fi-invalid {
@@ -746,8 +714,8 @@ body.fi-panel-user .fi-main-ctn .fi-ta-ctn .fi-ta-content-ctn {
 }
 
 .flowdesk-auth-layout .fi-checkbox-input:checked {
-    border-color: #6366f1 !important;
-    background-color: #6366f1 !important;
+    border-color: #0f766e !important;
+    background-color: #0f766e !important;
 }
 
 .flowdesk-auth-layout .fi-fo-checkbox,
@@ -779,16 +747,16 @@ body.fi-panel-user .fi-main-ctn .fi-ta-ctn .fi-ta-content-ctn {
     min-height: 48px !important;
     width: 100%;
     border-radius: 10px !important;
-    background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
+    background: linear-gradient(135deg, #10b981, #0f766e) !important;
     color: #ffffff !important;
     font-size: 14px !important;
     font-weight: 700 !important;
-    box-shadow: 0 10px 22px rgba(79, 70, 229, 0.28) !important;
+    box-shadow: 0 10px 22px rgba(15, 118, 110, 0.28) !important;
 }
 
 .flowdesk-auth-layout .fi-btn:hover,
 .flowdesk-auth-layout .fi-btn:focus-visible {
-    background: linear-gradient(135deg, #4f46e5, #4338ca) !important;
+    background: linear-gradient(135deg, #0f766e, #115e59) !important;
 }
 
 .flowdesk-auth-layout .fi-simple-layout-forgot-password-link {
@@ -805,7 +773,7 @@ body.fi-panel-user .fi-main-ctn .fi-ta-ctn .fi-ta-content-ctn {
 
 .flowdesk-auth-layout .fi-simple-layout-forgot-password-link .fi-link:hover,
 .flowdesk-auth-layout .fi-link:hover {
-    color: #6366f1 !important;
+    color: #0f766e !important;
 }
 
 /* Keep login light even when panel default theme is dark */
@@ -1031,17 +999,63 @@ html:not(.dark) .fi-main-sidebar img.fi-logo {
     transition: color 0.2s ease;
 }
 
-.fi-main-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-btn,
-.fi-main-sidebar .fi-sidebar-item.fi-sidebar-item-has-active-child-items > .fi-sidebar-item-btn {
-    background: var(--flowdesk-purple);
-    box-shadow: 0 8px 24px -12px rgba(99, 102, 241, 0.65);
+/*
+ | Active sidebar item
+ | Filament defaults use gray-100 + primary text. Our branded pill uses
+ | --flowdesk-purple + white text. Match Filament's `>` selectors and
+ | beat utility layers so white text never sits on a light gray background.
+ */
+html:not(.dark) .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn,
+html:not(.dark) .fi-main-sidebar .fi-sidebar-item.fi-sidebar-item-has-active-child-items > .fi-sidebar-item-btn,
+.dark .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn,
+.dark .fi-main-sidebar .fi-sidebar-item.fi-sidebar-item-has-active-child-items > .fi-sidebar-item-btn {
+    background-color: var(--flowdesk-purple) !important;
+    box-shadow: 0 8px 24px -12px color-mix(in srgb, var(--flowdesk-purple) 65%, transparent);
 }
 
-.fi-main-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-icon,
-.fi-main-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-label,
-.fi-main-sidebar .fi-sidebar-item.fi-sidebar-item-has-active-child-items > .fi-sidebar-item-btn .fi-sidebar-item-icon,
-.fi-main-sidebar .fi-sidebar-item.fi-sidebar-item-has-active-child-items > .fi-sidebar-item-btn .fi-sidebar-item-label {
-    color: #ffffff;
+html:not(.dark) .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-sidebar-item-icon,
+html:not(.dark) .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-icon,
+html:not(.dark) .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn .fi-sidebar-item-icon,
+html:not(.dark) .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-sidebar-item-label,
+html:not(.dark) .fi-main-sidebar .fi-sidebar-item.fi-sidebar-item-has-active-child-items > .fi-sidebar-item-btn > .fi-sidebar-item-icon,
+html:not(.dark) .fi-main-sidebar .fi-sidebar-item.fi-sidebar-item-has-active-child-items > .fi-sidebar-item-btn > .fi-icon,
+html:not(.dark) .fi-main-sidebar .fi-sidebar-item.fi-sidebar-item-has-active-child-items > .fi-sidebar-item-btn > .fi-sidebar-item-label,
+.dark .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-sidebar-item-icon,
+.dark .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-icon,
+.dark .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn .fi-sidebar-item-icon,
+.dark .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-sidebar-item-label,
+.dark .fi-main-sidebar .fi-sidebar-item.fi-sidebar-item-has-active-child-items > .fi-sidebar-item-btn > .fi-sidebar-item-icon,
+.dark .fi-main-sidebar .fi-sidebar-item.fi-sidebar-item-has-active-child-items > .fi-sidebar-item-btn > .fi-icon,
+.dark .fi-main-sidebar .fi-sidebar-item.fi-sidebar-item-has-active-child-items > .fi-sidebar-item-btn > .fi-sidebar-item-label {
+    color: #ffffff !important;
+}
+
+/* Keep active pill solid on hover (don't fall back to gray-100 / #f1f5f9) */
+html:not(.dark) .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn:hover,
+html:not(.dark) .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn:focus-visible,
+html:not(.dark) .fi-main-sidebar .fi-sidebar-item.fi-sidebar-item-has-active-child-items > .fi-sidebar-item-btn:hover,
+html:not(.dark) .fi-main-sidebar .fi-sidebar-item.fi-sidebar-item-has-active-child-items > .fi-sidebar-item-btn:focus-visible,
+.dark .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn:hover,
+.dark .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn:focus-visible,
+.dark .fi-main-sidebar .fi-sidebar-item.fi-sidebar-item-has-active-child-items > .fi-sidebar-item-btn:hover,
+.dark .fi-main-sidebar .fi-sidebar-item.fi-sidebar-item-has-active-child-items > .fi-sidebar-item-btn:focus-visible {
+    background-color: var(--flowdesk-purple) !important;
+    filter: brightness(0.94);
+}
+
+html:not(.dark) .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn:hover > .fi-sidebar-item-icon,
+html:not(.dark) .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn:hover > .fi-icon,
+html:not(.dark) .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn:hover > .fi-sidebar-item-label,
+html:not(.dark) .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn:focus-visible > .fi-sidebar-item-icon,
+html:not(.dark) .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn:focus-visible > .fi-icon,
+html:not(.dark) .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn:focus-visible > .fi-sidebar-item-label,
+.dark .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn:hover > .fi-sidebar-item-icon,
+.dark .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn:hover > .fi-icon,
+.dark .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn:hover > .fi-sidebar-item-label,
+.dark .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn:focus-visible > .fi-sidebar-item-icon,
+.dark .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn:focus-visible > .fi-icon,
+.dark .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn:focus-visible > .fi-sidebar-item-label {
+    color: #ffffff !important;
 }
 
 /* Topbar — theme-aware logo / brand text */

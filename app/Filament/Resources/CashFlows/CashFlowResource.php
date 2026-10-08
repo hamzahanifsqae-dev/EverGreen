@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\CashFlows;
 
+use App\Filament\Concerns\HasUiModuleVisibility;
 use App\Filament\Resources\CashFlows\Pages\CreateCashFlow;
 use App\Filament\Resources\CashFlows\Pages\EditCashFlow;
 use App\Filament\Resources\CashFlows\Pages\ListCashFlows;
@@ -28,6 +29,13 @@ use Illuminate\Database\Eloquent\Builder;
 
 class CashFlowResource extends Resource
 {
+    use HasUiModuleVisibility;
+
+    protected static function uiModuleKey(): ?string
+    {
+        return 'cash_flows';
+    }
+
     protected static ?string $model = CashFlow::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::ArrowsRightLeft;

@@ -2,13 +2,14 @@
 
 namespace App\Filament\Resources\NotificationTemplates;
 
+use App\Filament\Concerns\HasUiModuleVisibility;
 use App\Filament\Resources\NotificationTemplates\Pages\CreateNotificationTemplate;
 use App\Filament\Resources\NotificationTemplates\Pages\EditNotificationTemplate;
 use App\Filament\Resources\NotificationTemplates\Pages\ListNotificationTemplates;
 use App\Filament\Resources\NotificationTemplates\Schemas\NotificationTemplateForm;
 use App\Filament\Resources\NotificationTemplates\Tables\NotificationTemplatesTable;
-use App\Models\PermissionModule;
 use App\Models\NotificationTemplate;
+use App\Models\PermissionModule;
 use BackedEnum;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
@@ -18,6 +19,13 @@ use Filament\Tables\Table;
 
 class NotificationTemplateResource extends Resource
 {
+    use HasUiModuleVisibility;
+
+    protected static function uiModuleKey(): ?string
+    {
+        return 'notification_templates';
+    }
+
     protected static ?string $model = NotificationTemplate::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::ChatBubbleBottomCenterText;

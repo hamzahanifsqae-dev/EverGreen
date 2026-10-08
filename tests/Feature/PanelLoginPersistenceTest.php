@@ -14,7 +14,7 @@ class PanelLoginPersistenceTest extends TestCase
     public function test_merchant_login_persists_authentication(): void
     {
         $merchant = Merchant::query()
-            ->where('email', 'info@flowdesk.com')
+            ->where('email', 'info@evergreen.com')
             ->where('is_active', true)
             ->first();
 
@@ -26,8 +26,8 @@ class PanelLoginPersistenceTest extends TestCase
 
         Livewire::test(Login::class)
             ->fillForm([
-                'email' => 'info@flowdesk.com',
-                'password' => 'DD@2025@DD',
+                'email' => 'info@evergreen.com',
+                'password' => 'Evergreen@123',
             ])
             ->call('authenticate')
             ->assertHasNoFormErrors();

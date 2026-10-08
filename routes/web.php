@@ -1,10 +1,10 @@
 <?php
 
 use App\Http\Controllers\Asset\AssetPreviewController;
+use App\Http\Controllers\ColdStorage\ColdStorageDocumentController;
 use App\Http\Controllers\DemoAccountController;
 use App\Http\Controllers\DemoExitController;
 use App\Http\Controllers\Invoice\InvoiceController;
-use App\Http\Controllers\LandingPageController;
 use App\Models\Branch;
 use App\Models\Category;
 use App\Models\Merchant;
@@ -13,12 +13,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', LandingPageController::class)->name('landing');
+Route::redirect('/', '/merchant/login');
+
 Route::get('/demo/login', DemoAccountController::class)->name('demo.login');
 Route::get('/demo/exit', DemoExitController::class)->name('demo.exit');
 
 Route::get('/invoices/{type}/{id}', [InvoiceController::class, 'show'])
     ->name('invoices.show');
+
+Route::get('/cold-storage/{type}/{id}/print', [ColdStorageDocumentController::class, 'show'])
+    ->middleware(['web', 'auth.staff_or_merchant'])
+    ->name('cold-storage.print');
 
 Route::get('/assets/preview/{id}', [AssetPreviewController::class, 'show'])
     ->middleware(['web', 'auth.staff_or_merchant'])

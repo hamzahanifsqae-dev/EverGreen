@@ -27,7 +27,7 @@ class QaisarVendorPurchaseSeeder extends Seeder
 
     public function run(): void
     {
-        $merchants = Merchant::where('email', 'info@flowdesk.com')->get();
+        $merchants = Merchant::where('email', 'info@evergreen.com')->get();
 
         if ($merchants->isEmpty()) {
             $this->command->warn('primary merchant not found. Please run MerchantsSeeder first.');

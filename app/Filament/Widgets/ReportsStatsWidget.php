@@ -9,6 +9,7 @@ use App\Models\Payroll;
 use App\Models\Purchase;
 use App\Models\Sale;
 use App\Models\User;
+use App\Support\UiModules;
 use Filament\Facades\Filament;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\Widget;
@@ -24,17 +25,22 @@ class ReportsStatsWidget extends Widget
 
     protected int|string|array $columnSpan = 'full';
 
-    protected static ?int $sort = 1;
+    protected static ?int $sort = 2;
 
     /** @var list<string> */
     public array $overviewModules = [];
+
+    public static function canView(): bool
+    {
+        return UiModules::anyDashboardOverviewEnabled();
+    }
 
     /**
      * @return array<string, string>
      */
     public static function overviewModuleOptions(): array
     {
-        return [
+        $options = [
             'sales' => 'Sales',
             'purchases' => 'Purchases',
             'profit_loss' => 'Profit & Loss',
@@ -44,6 +50,10 @@ class ReportsStatsWidget extends Widget
             'funds' => 'Total Funds',
             'cash_flow' => 'Cash Flow',
         ];
+
+        return collect($options)
+            ->filter(fn (string $label, string $key): bool => UiModules::dashboardOverviewEnabled($key))
+            ->all();
     }
 
     /**

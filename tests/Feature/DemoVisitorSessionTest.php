@@ -86,7 +86,7 @@ class DemoVisitorSessionTest extends TestCase
 
         $response = $this->get(route('demo.login'));
 
-        $response->assertRedirect(route('landing'));
+        $response->assertRedirect(route('filament.merchant.auth.login'));
         $response->assertSessionHas('demo_expired');
         $this->assertGuest('merchant');
         $this->assertDatabaseMissing('merchants', ['id' => $merchant->id]);
@@ -109,7 +109,7 @@ class DemoVisitorSessionTest extends TestCase
         return Merchant::query()->create([
             'id' => Str::uuid()->toString(),
             'email' => DemoAccount::temporaryEmailForSession($sessionId),
-            'name' => 'Flowdesk Demo Store',
+            'name' => 'EverGreen Cold Storage Demo',
             'status' => Merchant::STATUS_VERIFIED,
             'is_active' => true,
             'password' => 'Demo@123456',

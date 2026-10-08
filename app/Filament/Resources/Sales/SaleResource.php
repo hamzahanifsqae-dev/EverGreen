@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Sales;
 
+use App\Filament\Concerns\HasUiModuleVisibility;
 use App\Filament\Resources\Sales\Pages\CreateSale;
 use App\Filament\Resources\Sales\Pages\EditSale;
 use App\Filament\Resources\Sales\Pages\ListSales;
@@ -9,17 +10,27 @@ use App\Filament\Resources\Sales\Pages\ViewSale;
 use App\Filament\Resources\Sales\Schemas\SaleForm;
 use App\Filament\Resources\Sales\Schemas\SaleInfolist;
 use App\Filament\Resources\Sales\Tables\SalesTable;
+use App\Models\Merchant;
 use App\Models\PermissionModule;
 use App\Models\Sale;
+use App\Models\User;
 use BackedEnum;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class SaleResource extends Resource
 {
+    use HasUiModuleVisibility;
+
+    protected static function uiModuleKey(): ?string
+    {
+        return 'sales';
+    }
+
     protected static ?string $model = Sale::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::CurrencyDollar;
@@ -81,7 +92,7 @@ class SaleResource extends Resource
         return false;
     }
 
-    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()
             ->with([
@@ -89,12 +100,12 @@ class SaleResource extends Resource
                 'items.product:id,name,sku',
                 'creditReminders:id,sale_id,is_active,next_send_at,last_sent_at,remind_at',
             ]);
-        $user  = Filament::auth()->user();
+        $user = Filament::auth()->user();
 
         $merchantId = match (true) {
-            $user instanceof \App\Models\Merchant => $user->id,
-            $user instanceof \App\Models\User     => $user->merchant_id,
-            default                               => null,
+            $user instanceof Merchant => $user->id,
+            $user instanceof User => $user->merchant_id,
+            default => null,
         };
 
         if (! $merchantId) {
@@ -104,7 +115,6 @@ class SaleResource extends Resource
         // All users (merchant or staff) see all sales for their merchant
         return $query->where('merchant_id', $merchantId);
     }
-
 
     public static function form(Schema $schema): Schema
     {

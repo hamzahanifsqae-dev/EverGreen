@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Vendors;
 
+use App\Filament\Concerns\HasUiModuleVisibility;
 use App\Filament\Resources\Vendors\Pages\CreateVendor;
 use App\Filament\Resources\Vendors\Pages\EditVendor;
 use App\Filament\Resources\Vendors\Pages\ListVendors;
@@ -25,6 +26,13 @@ use Illuminate\Support\Str;
 
 class VendorResource extends Resource
 {
+    use HasUiModuleVisibility;
+
+    protected static function uiModuleKey(): ?string
+    {
+        return 'vendors';
+    }
+
     protected static ?string $model = Vendor::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::Users;
@@ -51,7 +59,7 @@ class VendorResource extends Resource
         return $user->hasPermissionTo('vendors.view', $guard);
     }
 
-    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    public static function getEloquentQuery(): Builder
     {
         $user = Filament::auth()->user();
         $query = parent::getEloquentQuery();

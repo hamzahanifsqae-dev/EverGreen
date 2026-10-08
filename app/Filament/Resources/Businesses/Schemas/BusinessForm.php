@@ -15,14 +15,13 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Schema;
 use Illuminate\Validation\Rule;
 
-
 class BusinessForm
 {
-
     public static function configure(Schema $schema): Schema
     {
 
         $user = Filament::auth()->user();
+
         return $schema
             ->components([
                 TextInput::make('name')
@@ -32,9 +31,8 @@ class BusinessForm
                     ->live()
                     ->rules([
                         fn ($get) => Rule::unique('businesses', 'name')
-                            ->where(fn ($query) =>
-                                $query->where('merchant_id', $get('merchant_id'))
-                                    ->whereNull('deleted_at')
+                            ->where(fn ($query) => $query->where('merchant_id', $get('merchant_id'))
+                                ->whereNull('deleted_at')
                             )
                             ->ignore($get('id')),
                     ])
@@ -77,24 +75,22 @@ class BusinessForm
                         $livewire->resetErrorBag('data.cities');
                     }),
 
-
                 Select::make('cities')
                     ->label('Cities')
                     ->relationship(
                         'cities',
                         'name',
-                        fn ($query, callable $get) =>
-                        $query->whereIn('country_id', $get('countries') ?? [])
+                        fn ($query, callable $get) => $query->whereIn('country_id', $get('countries') ?? [])
                     )
                     ->multiple()
                     ->createOptionForm([
-                    Select::make('country_id')
-                        ->label('Country')
-                        ->options(fn (): array => GeoFormFields::countryOptions())
-                        ->default(fn (callable $get) => ($get('../../countries') ?? [])[0] ?? GeoFormFields::defaultCountryId())
-                        ->searchable()
-                        ->preload()
-                        ->required(),
+                        Select::make('country_id')
+                            ->label('Country')
+                            ->options(fn (): array => GeoFormFields::countryOptions())
+                            ->default(fn (callable $get) => ($get('../../countries') ?? [])[0] ?? GeoFormFields::defaultCountryId())
+                            ->searchable()
+                            ->preload()
+                            ->required(),
                         TextInput::make('name')
                             ->label('City Name')
                             ->required()
@@ -108,8 +104,6 @@ class BusinessForm
                         $livewire->resetValidation('data.cities');
                         $livewire->resetErrorBag('data.cities');
                     }),
-
-
 
                 Grid::make(2)
                     ->schema([
@@ -127,23 +121,20 @@ class BusinessForm
                                 $livewire->resetErrorBag('data.postal_code');
                             }),
 
-
-
                     ])
                     ->columnSpanFull()
                     ->columns(2),
 
-
-                    Toggle::make('status')
-                        ->required(),
+                Toggle::make('status')
+                    ->label('Active')
+                    ->default(true)
+                    ->required(),
                 Hidden::make('merchant_id')
-                    ->default(fn () =>
-                    $user instanceof \App\Models\User
+                    ->default(fn () => $user instanceof User
                         ? $user->merchant_id
                         : $user?->id
-                    )
+                    ),
             ]);
-
 
     }
 }

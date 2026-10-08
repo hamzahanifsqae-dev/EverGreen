@@ -29,8 +29,8 @@ class CleanStartSeeder extends Seeder
         $this->command?->info('');
         $this->command?->info('Clean start complete. Database is empty except login essentials.');
         $this->command?->info('Merchant login → http://127.0.0.1:8000/merchant');
-        $this->command?->info('Email: info@flowdesk.com');
-        $this->command?->info('Password: DD@2025@DD');
+        $this->command?->info('Email: info@evergreen.com');
+        $this->command?->info('Password: Evergreen@123');
         $this->command?->info('');
         $this->command?->info('Add your own: Business → Branch → Products → Purchases → Sales');
     }

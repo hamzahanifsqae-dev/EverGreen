@@ -14,7 +14,7 @@ class TyresAlloyWheelsProductsSeeder extends Seeder
 {
     public function run(): void
     {
-        $merchant = Merchant::where('email', 'info@flowdesk.com')->first();
+        $merchant = Merchant::where('email', 'info@evergreen.com')->first();
         if (! $merchant) {
             return;
         }

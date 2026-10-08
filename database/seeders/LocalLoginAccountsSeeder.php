@@ -18,10 +18,10 @@ class LocalLoginAccountsSeeder extends Seeder
 
     public function run(): void
     {
-        $merchant = Merchant::query()->where('email', 'info@flowdesk.com')->first();
+        $merchant = Merchant::query()->where('email', 'info@evergreen.com')->first();
 
         if (! $merchant) {
-            $this->command?->error('Merchant info@flowdesk.com not found. Run MerchantsSeeder first.');
+            $this->command?->error('Merchant info@evergreen.com not found. Run MerchantsSeeder first.');
 
             return;
         }
@@ -47,7 +47,7 @@ class LocalLoginAccountsSeeder extends Seeder
         $this->command?->info('');
         $this->command?->info('Local login accounts ready:');
         $this->command?->info('  Merchant → http://127.0.0.1:8000/merchant/login');
-        $this->command?->info('    Email: info@flowdesk.com');
+        $this->command?->info('    Email: info@evergreen.com');
         $this->command?->info('    Password: '.self::PASSWORD);
         $this->command?->info('');
         $this->command?->info('  Staff → http://127.0.0.1:8000/staff/login');

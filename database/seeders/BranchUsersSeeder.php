@@ -14,7 +14,7 @@ class BranchUsersSeeder extends Seeder
 {
     public function run(): void
     {
-        $primaryMerchant = Merchant::where('email', 'info@flowdesk.com')->first();
+        $primaryMerchant = Merchant::where('email', 'info@evergreen.com')->first();
         $primaryMerchantBranches = Branch::where('merchant_id', $primaryMerchant->id)->get();
 
         $halaynoor = Merchant::where('email', 'info@halaynoor.com')->first();

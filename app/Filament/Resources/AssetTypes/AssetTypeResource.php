@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\AssetTypes;
 
+use App\Filament\Concerns\HasUiModuleVisibility;
 use App\Filament\Resources\AssetTypes\Pages\CreateAssetType;
 use App\Filament\Resources\AssetTypes\Pages\EditAssetType;
 use App\Filament\Resources\AssetTypes\Pages\ListAssetTypes;
@@ -21,6 +22,13 @@ use Illuminate\Database\Eloquent\Builder;
 
 class AssetTypeResource extends Resource
 {
+    use HasUiModuleVisibility;
+
+    protected static function uiModuleKey(): ?string
+    {
+        return 'asset_types';
+    }
+
     protected static ?string $model = AssetType::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::Tag;

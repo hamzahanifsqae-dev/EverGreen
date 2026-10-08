@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Roles;
 
+use App\Filament\Concerns\HasUiModuleVisibility;
 use App\Filament\Resources\Roles\Pages\CreateRoles;
 use App\Filament\Resources\Roles\Pages\EditRoles;
 use App\Filament\Resources\Roles\Pages\ListRoles;
@@ -9,6 +10,7 @@ use App\Filament\Resources\Roles\Schemas\RolesForm;
 use App\Filament\Resources\Roles\Tables\RolesTable;
 use App\Models\PermissionModule;
 use App\Models\Role;
+use App\Models\User;
 use BackedEnum;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
@@ -19,6 +21,13 @@ use Illuminate\Database\Eloquent\Builder;
 
 class RolesResource extends Resource
 {
+    use HasUiModuleVisibility;
+
+    protected static function uiModuleKey(): ?string
+    {
+        return 'roles';
+    }
+
     protected static ?string $model = Role::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::Key;
@@ -33,14 +42,15 @@ class RolesResource extends Resource
     {
         $user = Filament::auth()->user();
 
-        $guard=Filament::getCurrentPanel()->getAuthGuard();
-//        if (! $user || $guard=='staff') {
-//            return false;
-//        }
+        $guard = Filament::getCurrentPanel()->getAuthGuard();
+        //        if (! $user || $guard=='staff') {
+        //            return false;
+        //        }
 
         if (! PermissionModule::isEnabledForCurrentMerchant('roles_permissions')) {
             return false;
         }
+
         return $user->hasPermissionTo(
             'roles_permissions.view',
             $guard
@@ -56,7 +66,8 @@ class RolesResource extends Resource
     {
         return RolesTable::configure($table);
     }
-    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+
+    public static function getEloquentQuery(): Builder
     {
         return Role::query()->where('guard_name', 'merchant');
     }
@@ -79,7 +90,7 @@ class RolesResource extends Resource
         $guard = Filament::getCurrentPanel()->getAuthGuard();
 
         // Staff can only assign permissions they already have.
-        if ($user instanceof \App\Models\User) {
+        if ($user instanceof User) {
             $matrix = [];
 
             foreach ($enabledModules as $module) {
@@ -129,10 +140,9 @@ class RolesResource extends Resource
         $user = Filament::auth()->user();
 
         // Preserve non-assignable permissions when staff edits an existing role.
-        if ($user instanceof \App\Models\User) {
+        if ($user instanceof User) {
             $assignablePermissionNames = collect($assignable)
-                ->flatMap(fn (array $actions, string $module) =>
-                    collect($actions)->map(fn (string $action) => "{$module}.{$action}")
+                ->flatMap(fn (array $actions, string $module) => collect($actions)->map(fn (string $action) => "{$module}.{$action}")
                 )
                 ->all();
 
@@ -147,6 +157,7 @@ class RolesResource extends Resource
 
         $record->syncPermissions($permissions);
     }
+
     public static function getPages(): array
     {
         return [

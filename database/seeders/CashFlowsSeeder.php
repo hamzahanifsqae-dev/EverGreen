@@ -15,7 +15,7 @@ class CashFlowsSeeder extends Seeder
     public function run(): void
     {
         $merchant = Merchant::query()
-            ->where('email', 'info@flowdesk.com')
+            ->where('email', 'info@evergreen.com')
             ->first() ?? Merchant::query()->first();
 
         if (! $merchant) {

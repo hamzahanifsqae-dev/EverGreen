@@ -42,6 +42,7 @@ class PermissionsSeeder extends Seeder
             'audits' => ['view', 'create', 'update', 'delete'],
             'payrolls' => ['view', 'create', 'update', 'delete'],
             'invoice_templates' => ['view', 'create', 'update', 'delete'],
+            'cold_storage' => ['view', 'create', 'update', 'delete'],
         ];
 
         foreach ($modules as $module => $actions) {

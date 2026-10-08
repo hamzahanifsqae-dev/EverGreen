@@ -46,7 +46,7 @@ use Illuminate\Support\Str;
 class DemoSeeder extends Seeder
 {
     // ─── Merchant to seed for ─────────────────────────────────────
-    private string $merchantEmail = 'info@flowdesk.com';
+    private string $merchantEmail = 'info@evergreen.com';
 
     private ?string $staffEmailNamespace = null;
 

@@ -11,19 +11,24 @@ class CreatePermissionModule extends CreateRecord
 {
     protected static string $resource = PermissionModuleResource::class;
 
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
+
     protected function afterCreate(): void
     {
         $module = $this->record->module;
 
         $actions = ['view', 'create', 'update', 'delete'];
-        $guards  = ['admin', 'merchant', 'staff'];
+        $guards = ['admin', 'merchant', 'staff'];
 
         DB::transaction(function () use ($module, $actions, $guards) {
             foreach ($guards as $guard) {
                 foreach ($actions as $action) {
                     Permission::firstOrCreate(
                         [
-                            'name'       => "{$module}.{$action}",
+                            'name' => "{$module}.{$action}",
                             'guard_name' => $guard,
                         ]
                     );

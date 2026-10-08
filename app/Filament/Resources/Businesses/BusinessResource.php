@@ -2,23 +2,33 @@
 
 namespace App\Filament\Resources\Businesses;
 
+use App\Filament\Concerns\HasUiModuleVisibility;
 use App\Filament\Resources\Businesses\Pages\CreateBusiness;
 use App\Filament\Resources\Businesses\Pages\EditBusiness;
 use App\Filament\Resources\Businesses\Pages\ListBusinesses;
 use App\Filament\Resources\Businesses\Schemas\BusinessForm;
 use App\Filament\Resources\Businesses\Tables\BusinessesTable;
 use App\Models\Business;
+use App\Models\Merchant;
 use App\Models\PermissionModule;
+use App\Models\User;
 use BackedEnum;
 use Filament\Facades\Filament;
-use Filament\Forms\Components\Builder;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class BusinessResource extends Resource
 {
+    use HasUiModuleVisibility;
+
+    protected static function uiModuleKey(): ?string
+    {
+        return 'businesses';
+    }
+
     protected static ?string $model = Business::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::Briefcase;
@@ -47,21 +57,19 @@ class BusinessResource extends Resource
         return $user->hasPermissionTo('businesses.view', $guard);
     }
 
-    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    public static function getEloquentQuery(): Builder
     {
         $user = Filament::auth()->user();
         $query = parent::getEloquentQuery();
 
-
         // Merchant → own businesses
-        if ($user instanceof \App\Models\Merchant) {
+        if ($user instanceof Merchant) {
             return $query->where('merchant_id', $user->id);
         }
 
         // Staff → ONLY assigned businesses
-        if ($user instanceof \App\Models\User) {
-            return $query->whereHas('users', fn ($q) =>
-            $q->where('users.id', $user->id)
+        if ($user instanceof User) {
+            return $query->whereHas('users', fn ($q) => $q->where('users.id', $user->id)
             );
         }
 

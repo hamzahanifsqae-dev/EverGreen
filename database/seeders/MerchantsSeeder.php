@@ -13,13 +13,15 @@ class MerchantsSeeder extends Seeder
     {
         $merchants = [
             [
-                'email' => 'info@flowdesk.com',
-                'name' => 'Flowdesk',
+                'email' => 'info@evergreen.com',
+                'legacy_emails' => ['info@flowdesk.com'],
+                'name' => 'EverGreen Cold Storage',
                 'website' => 'https://flowdesk.app/',
-                'password' => 'DD@2025@DD',
+                'password' => 'Evergreen@123',
             ],
             [
                 'email' => 'info@halaynoor.com',
+                'legacy_emails' => [],
                 'name' => 'Halaynoor',
                 'website' => 'https://halaynoor.com/',
                 'password' => 'DD@2025@DD',
@@ -29,22 +31,26 @@ class MerchantsSeeder extends Seeder
         $demoMerchantAccess = app(DemoMerchantAccess::class);
 
         foreach ($merchants as $data) {
-            $merchant = Merchant::firstOrCreate(
-                ['email' => $data['email']],
-                [
+            $merchant = Merchant::query()
+                ->where('email', $data['email'])
+                ->when(
+                    $data['legacy_emails'] !== [],
+                    fn ($query) => $query->orWhereIn('email', $data['legacy_emails']),
+                )
+                ->first();
+
+            if (! $merchant) {
+                $merchant = new Merchant([
                     'id' => Str::uuid()->toString(),
-                    'name' => $data['name'],
+                    'email' => $data['email'],
                     'phone' => null,
                     'address_line_1' => 'Pakistan',
                     'city' => 'Karachi',
-                    'website' => $data['website'],
-                    'status' => Merchant::STATUS_VERIFIED,
-                    'is_active' => true,
-                    'password' => $data['password'],
-                ]
-            );
+                ]);
+            }
 
             $merchant->forceFill([
+                'email' => $data['email'],
                 'name' => $data['name'],
                 'website' => $data['website'],
                 'status' => Merchant::STATUS_VERIFIED,

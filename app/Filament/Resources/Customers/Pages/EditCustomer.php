@@ -3,11 +3,13 @@
 namespace App\Filament\Resources\Customers\Pages;
 
 use App\Filament\Resources\Customers\CustomerResource;
+use App\Models\ColdStorageBill;
 use App\Models\Sale;
 use Filament\Actions\DeleteAction;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Str;
 
 class EditCustomer extends EditRecord
 {
@@ -19,9 +21,8 @@ class EditCustomer extends EditRecord
     {
         $name = (string) ($this->record?->name ?? '');
 
-        return 'Edit ' . \Illuminate\Support\Str::limit($name, 30);
+        return 'Edit '.Str::limit($name, 30);
     }
-
 
     protected function getRedirectUrl(): string
     {
@@ -72,10 +73,18 @@ class EditCustomer extends EditRecord
                         ->where('due_amount', '>', 0)
                         ->exists();
 
-                    if ($hasOutstandingCredit) {
+                    $hasOutstandingStorage = ColdStorageBill::query()
+                        ->where('customer_id', $record->id)
+                        ->where('status', 'posted')
+                        ->where('due_amount', '>', 0)
+                        ->exists();
+
+                    if ($hasOutstandingCredit || $hasOutstandingStorage) {
                         Notification::make()
                             ->title('Cannot delete customer')
-                            ->body('This customer has outstanding credit sales. Clear pending dues first.')
+                            ->body($hasOutstandingStorage
+                                ? 'This customer has outstanding storage charges. Clear pending dues first.'
+                                : 'This customer has outstanding credit sales. Clear pending dues first.')
                             ->danger()
                             ->send();
 

@@ -2,15 +2,19 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\HasUiModuleVisibility;
 use App\Filament\Exports\SalesSummaryExport;
+use App\Models\Branch;
+use App\Models\Customer;
 use App\Models\Merchant;
 use App\Models\Sale;
+use App\Models\User;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
-use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -22,17 +26,25 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 
-
-
-
 class SalesSummary extends Page implements HasTable
 {
+    use HasUiModuleVisibility;
+
+    protected static function uiModuleKey(): ?string
+    {
+        return 'sales_summary';
+    }
+
     use InteractsWithTable;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::CurrencyDollar;
+
     protected static string|\UnitEnum|null $navigationGroup = 'Reportings';
+
     protected static ?int $navigationSort = 4;
+
     protected static ?string $title = 'Sales Summary';
+
     protected static ?string $navigationLabel = 'Sales Summary';
 
     protected string $view = 'filament.pages.sales-summary';
@@ -48,9 +60,9 @@ class SalesSummary extends Page implements HasTable
         return $table
             ->query(function () use ($user) {
                 $merchantId = match (true) {
-                    $user instanceof \App\Models\Merchant => $user->id,
-                    $user instanceof \App\Models\User     => $user->merchant_id,
-                    default                               => null,
+                    $user instanceof Merchant => $user->id,
+                    $user instanceof User => $user->merchant_id,
+                    default => null,
                 };
 
                 if (! $merchantId) {
@@ -64,13 +76,11 @@ class SalesSummary extends Page implements HasTable
                     ->withCount('returns')
                     ->withSum('returns as returned_amount', 'total_amount');
 
-                if ($user instanceof \App\Models\User) {
+                if ($user instanceof User) {
                     $query
-                        ->whereHas('items.business.users', fn ($q) =>
-                        $q->where('users.id', $user->id)
+                        ->whereHas('items.business.users', fn ($q) => $q->where('users.id', $user->id)
                         )
-                        ->whereHas('items.branch.users', fn ($q) =>
-                        $q->where('users.id', $user->id)
+                        ->whereHas('items.branch.users', fn ($q) => $q->where('users.id', $user->id)
                         );
                 }
 
@@ -115,11 +125,10 @@ class SalesSummary extends Page implements HasTable
 
                         return array_merge(
                             array_slice($state, 0, 2),
-                            ['+' . (count($state) - 2) . ' more']
+                            ['+'.(count($state) - 2).' more']
                         );
                     })
                     ->toggleable(),
-
 
                 TextColumn::make('items_count')
                     ->label('Items')
@@ -202,16 +211,14 @@ class SalesSummary extends Page implements HasTable
 
                 TextColumn::make('returned_quantity')
                     ->label('Returned Qty')
-                    ->getStateUsing(fn (Sale $record) =>
-                        (float) $record->returns->sum(fn ($return) => $return->items->sum('quantity'))
+                    ->getStateUsing(fn (Sale $record) => (float) $record->returns->sum(fn ($return) => $return->items->sum('quantity'))
                     )
                     ->numeric(0)
                     ->toggleable(),
 
                 TextColumn::make('sale_quantity')
                     ->label('Sale Qty')
-                    ->getStateUsing(fn (Sale $record) =>
-                        (float) $record->items->sum('quantity')
+                    ->getStateUsing(fn (Sale $record) => (float) $record->items->sum('quantity')
                         + (float) $record->returns->sum(fn ($return) => $return->items->sum('quantity'))
                     )
                     ->numeric(0)
@@ -248,7 +255,7 @@ class SalesSummary extends Page implements HasTable
                 SelectFilter::make('payment_type')
                     ->label('Payment Type')
                     ->options([
-                        'cash'   => 'Cash',
+                        'cash' => 'Cash',
                         'credit' => 'Credit',
                     ]),
 
@@ -258,29 +265,26 @@ class SalesSummary extends Page implements HasTable
                         $user = Filament::auth()->user();
 
                         $merchantId = match (true) {
-                            $user instanceof \App\Models\Merchant => $user->id,
-                            $user instanceof \App\Models\User     => $user->merchant_id,
-                            default                               => null,
+                            $user instanceof Merchant => $user->id,
+                            $user instanceof User => $user->merchant_id,
+                            default => null,
                         };
 
                         if (! $merchantId) {
                             return [];
                         }
 
-                        return \App\Models\Customer::query()
+                        return Customer::query()
                             ->withoutTrashed()
                             ->where('merchant_id', $merchantId)
                             ->orderBy('name')
                             ->pluck('name', 'id')
                             ->toArray();
                     })
-                    ->query(fn (Builder $query, array $data) =>
-                        filled($data['value'])
+                    ->query(fn (Builder $query, array $data) => filled($data['value'])
                             ? $query->where('customer_id', $data['value'])
                             : null
                     ),
-
-
 
                 SelectFilter::make('branch_id')
                     ->label('Branch')
@@ -288,32 +292,29 @@ class SalesSummary extends Page implements HasTable
                         $user = Filament::auth()->user();
 
                         $merchantId = match (true) {
-                            $user instanceof \App\Models\Merchant => $user->id,
-                            $user instanceof \App\Models\User     => $user->merchant_id,
-                            default                               => null,
+                            $user instanceof Merchant => $user->id,
+                            $user instanceof User => $user->merchant_id,
+                            default => null,
                         };
 
                         if (! $merchantId) {
                             return [];
                         }
 
-                        $query = \App\Models\Branch::query()
+                        $query = Branch::query()
                             ->withoutTrashed()
                             ->where('merchant_id', $merchantId);
 
-                        if ($user instanceof \App\Models\User) {
-                            $query->whereHas('users', fn ($q) =>
-                            $q->where('users.id', $user->id)
+                        if ($user instanceof User) {
+                            $query->whereHas('users', fn ($q) => $q->where('users.id', $user->id)
                             );
                         }
 
                         return $query->orderBy('name')->pluck('name', 'id')->toArray();
                     })
-                    ->query(fn (Builder $query, array $data) =>
-                    filled($data['value'])
-                        ? $query->whereHas('items', fn ($q) =>
-                    $q->where('branch_id', $data['value'])
-                    )
+                    ->query(fn (Builder $query, array $data) => filled($data['value'])
+                        ? $query->whereHas('items', fn ($q) => $q->where('branch_id', $data['value'])
+                        )
                         : null
                     ),
 
@@ -331,6 +332,7 @@ class SalesSummary extends Page implements HasTable
         $query = clone $this->getFilteredTableQuery();
         $query->getQuery()->limit = null;
         $query->getQuery()->offset = null;
+
         return $query;
     }
 
@@ -343,9 +345,9 @@ class SalesSummary extends Page implements HasTable
         $filteredQuery = $this->getFilteredTableQueryWithoutPagination();
         $user = Filament::auth()->user();
         $merchantId = match (true) {
-            $user instanceof \App\Models\Merchant => $user->id,
-            $user instanceof \App\Models\User     => $user->merchant_id,
-            default                               => null,
+            $user instanceof Merchant => $user->id,
+            $user instanceof User => $user->merchant_id,
+            default => null,
         };
 
         // Sale IDs in scope
@@ -376,7 +378,7 @@ class SalesSummary extends Page implements HasTable
         // -----------------------------
         // MONETARY TOTALS (SALE LEVEL)
         // -----------------------------
-        $totalAmount   = (clone $filteredQuery)->sum('total_amount');
+        $totalAmount = (clone $filteredQuery)->sum('total_amount');
         $totalDiscount = DB::table('sale_items')
             ->whereIn('sale_id', $saleIds)
             ->sum(DB::raw('line_total * (discount / 100.0)'));
@@ -419,14 +421,14 @@ class SalesSummary extends Page implements HasTable
 
         // 🚨 HEADERS EXACTLY AS REQUIRED
         return [
-            'total_sales'        => (int) $totalSales,
-            'total_items_count'  => (int) $totalItemLines, // ✅ NOW MATCHES TABLE
-            'total_quantity'     => (float) $netQuantity,
-            'total_amount'       => (float) $netAmount,
-            'total_discount'     => (float) $netDiscount,
-            'total_tax'          => (float) $netTax,
-            'total_subtotal'     => (float) $netSubtotal,
-            'avg_sale'           => round($avgSale, 2),
+            'total_sales' => (int) $totalSales,
+            'total_items_count' => (int) $totalItemLines, // ✅ NOW MATCHES TABLE
+            'total_quantity' => (float) $netQuantity,
+            'total_amount' => (float) $netAmount,
+            'total_discount' => (float) $netDiscount,
+            'total_tax' => (float) $netTax,
+            'total_subtotal' => (float) $netSubtotal,
+            'avg_sale' => round($avgSale, 2),
             'opening_total_funds' => (float) $openingTotalFunds,
             'sales_cash_effect' => (float) $salesCashEffect,
             'current_total_funds' => (float) $currentTotalFunds,
@@ -527,7 +529,7 @@ class SalesSummary extends Page implements HasTable
                         'tax' => (float) DB::table('sale_items')
                             ->whereIn('sale_id', $saleIds)
                             ->sum(DB::raw('(line_total - (line_total * (discount / 100.0))) * (tax / 100.0)')),
-                        'total'    => (float) (clone $baseQuery)->sum('total_amount'),
+                        'total' => (float) (clone $baseQuery)->sum('total_amount'),
                         'returned_quantity' => (float) DB::table('sale_return_items as sri')
                             ->join('sale_returns as sr', 'sr.id', '=', 'sri.sale_return_id')
                             ->whereIn('sr.sale_id', $saleIds)
@@ -559,11 +561,9 @@ class SalesSummary extends Page implements HasTable
 
                     return Excel::download(
                         new SalesSummaryExport($exportQuery, $totals),
-                        'sales-summary-' . now()->format('Y-m-d_H-i-s') . '.xlsx'
+                        'sales-summary-'.now()->format('Y-m-d_H-i-s').'.xlsx'
                     );
                 }),
         ];
     }
-
-
 }

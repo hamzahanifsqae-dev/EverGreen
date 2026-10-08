@@ -21,7 +21,7 @@ class BranchesSeeder extends Seeder
             return;
         }
 
-        $primaryMerchant = Merchant::where('email', 'info@flowdesk.com')->first();
+        $primaryMerchant = Merchant::where('email', 'info@evergreen.com')->first();
         $halaynoor = Merchant::where('email', 'info@halaynoor.com')->first();
 
         if ($primaryMerchant) {

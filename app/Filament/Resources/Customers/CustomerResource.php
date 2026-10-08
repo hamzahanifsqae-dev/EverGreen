@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Customers;
 
+use App\Filament\Concerns\HasUiModuleVisibility;
 use App\Filament\Resources\Customers\Pages\CreateCustomer;
 use App\Filament\Resources\Customers\Pages\EditCustomer;
 use App\Filament\Resources\Customers\Pages\ListCustomers;
@@ -25,6 +26,13 @@ use Illuminate\Support\Str;
 
 class CustomerResource extends Resource
 {
+    use HasUiModuleVisibility;
+
+    protected static function uiModuleKey(): ?string
+    {
+        return 'customers';
+    }
+
     protected static ?string $model = Customer::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::Users;
@@ -53,17 +61,13 @@ class CustomerResource extends Resource
         return $user->hasPermissionTo('customers.view', $guard);
     }
 
-    /**
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    public static function getEloquentQuery(): Builder
     {
         $user = Filament::auth()->user();
         $query = parent::getEloquentQuery();
 
         return static::scopeVisibleCustomers($query, $user);
     }
-
 
     public static function form(Schema $schema): Schema
     {

@@ -67,7 +67,7 @@ class MerchantPanelProvider extends PanelProvider
             })
             ->brandName(fn () => Filament::auth()->user()?->name ?? config('branding.name'))
             ->brandLogoHeight('2.5rem')
-            ->darkModeBrandLogo(asset('images/flowdesk-logo-dark.svg'))
+            ->darkModeBrandLogo(asset(config('branding.logo_dark')))
             ->userMenuItems([
                 Action::make('editProfile')
                     ->label('Edit profile')
@@ -107,6 +107,7 @@ class MerchantPanelProvider extends PanelProvider
                 'Inventory',
                 'Assets',
                 'Reportings',
+                'Cold Storage',
                 'Configurations',
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
@@ -114,6 +115,8 @@ class MerchantPanelProvider extends PanelProvider
             ->pages([
                 Dashboard::class,
             ])
+            ->resourceCreatePageRedirect('index')
+            ->resourceEditPageRedirect('index')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([])
             ->middleware([

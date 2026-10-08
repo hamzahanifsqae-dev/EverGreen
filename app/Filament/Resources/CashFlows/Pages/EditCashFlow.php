@@ -13,7 +13,13 @@ use Filament\Support\Enums\Width;
 class EditCashFlow extends EditRecord
 {
     protected static string $resource = CashFlowResource::class;
+
     protected Width|string|null $maxContentWidth = Width::Full;
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 
     protected function getHeaderActions(): array
     {

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Activities;
 
+use App\Filament\Concerns\HasUiModuleVisibility;
 use App\Filament\Resources\Activities\Pages\ListActivities;
 use App\Filament\Resources\Activities\Pages\ViewActivity;
 use App\Filament\Resources\Activities\Schemas\ActivityInfolist;
@@ -20,11 +21,18 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ActivityResource extends Resource
 {
+    use HasUiModuleVisibility;
+
+    protected static function uiModuleKey(): ?string
+    {
+        return 'audits';
+    }
+
     protected static ?string $model = Audit::class;
 
-    protected static string | BackedEnum | null $navigationIcon = Heroicon::ClipboardDocumentList;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::ClipboardDocumentList;
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Reportings';
+    protected static string|\UnitEnum|null $navigationGroup = 'Reportings';
 
     protected static ?int $navigationSort = 1;
 
@@ -80,8 +88,8 @@ class ActivityResource extends Resource
 
         $merchantId = match (true) {
             $authUser instanceof Merchant => $authUser->id,
-            $authUser instanceof User     => $authUser->merchant_id,
-            default                       => null,
+            $authUser instanceof User => $authUser->merchant_id,
+            default => null,
         };
 
         if (! $merchantId) {

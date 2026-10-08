@@ -13,10 +13,16 @@ use Illuminate\Database\Eloquent\Model;
 class EditMerchantSetting extends EditRecord
 {
     protected static string $resource = MerchantSettingResource::class;
+
     protected static ?string $title = 'Merchant Settings';
 
     /** Processed logo path captured in mutateFormDataBeforeSave (file already moved by Filament) */
     private ?string $pendingLogoPath = null;
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 
     /** True when the user explicitly cleared the logo */
     private bool $clearLogo = false;
@@ -95,16 +101,18 @@ class EditMerchantSetting extends EditRecord
     protected function afterSave(): void
     {
         $merchant = $this->record->merchant ?? auth('merchant')->user();
-        if (! $merchant) return;
+        if (! $merchant) {
+            return;
+        }
 
         /* ── MERCHANT LOGO ── */
         if ($this->pendingLogoPath) {
             $merchant->logo()?->delete();
             $merchant->logo()->create([
                 'merchant_id' => $merchant->id,
-                'type'        => AttachmentType::IMAGE,
-                'meta_type'   => AttachmentMetaType::MERCHANT_LOGO,
-                'photo_url'   => $this->pendingLogoPath,
+                'type' => AttachmentType::IMAGE,
+                'meta_type' => AttachmentMetaType::MERCHANT_LOGO,
+                'photo_url' => $this->pendingLogoPath,
             ]);
         } elseif ($this->clearLogo) {
             $merchant->logo()?->delete();

@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::getConnection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         DB::statement('ALTER TABLE products DROP CONSTRAINT IF EXISTS products_category_id_foreign');
         DB::statement('ALTER TABLE products DROP CONSTRAINT IF EXISTS products_sub_category_id_foreign');
         DB::statement('ALTER TABLE products DROP CONSTRAINT IF EXISTS products_brand_id_foreign');
@@ -21,6 +25,9 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (Schema::getConnection()->getDriverName() === 'sqlite') {
+            return;
+        }
         DB::statement('ALTER TABLE products DROP CONSTRAINT IF EXISTS products_category_id_foreign');
         DB::statement('ALTER TABLE products DROP CONSTRAINT IF EXISTS products_sub_category_id_foreign');
         DB::statement('ALTER TABLE products DROP CONSTRAINT IF EXISTS products_brand_id_foreign');

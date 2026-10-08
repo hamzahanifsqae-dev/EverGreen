@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users;
 
+use App\Filament\Concerns\HasUiModuleVisibility;
 use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
@@ -15,71 +16,84 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-
+use Illuminate\Database\Eloquent\Builder;
 
 class UserResource extends Resource
 {
+    use HasUiModuleVisibility;
+
+    protected static function uiModuleKey(): ?string
+    {
+        return 'staff';
+    }
+
     protected static ?string $model = User::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::User;
+
     protected static string|\UnitEnum|null $navigationGroup = 'Configurations';
+
     protected static ?string $navigationLabel = 'Staff';
+
     protected static ?string $modelLabel = 'Staff';
+
     protected static ?string $pluralModelLabel = 'Staff';
 
-
     protected static ?int $navigationSort = 3;
+
     protected static ?string $recordTitleAttribute = 'name';
+
     public static function canViewAny(): bool
     {
         $user = Filament::auth()->user();
 
-        $guard=Filament::getCurrentPanel()->getAuthGuard();
-//        if (! $user || $guard=='staff') {
-//            return false;
-//        }
+        $guard = Filament::getCurrentPanel()->getAuthGuard();
+        //        if (! $user || $guard=='staff') {
+        //            return false;
+        //        }
 
         if (! PermissionModule::isEnabledForCurrentMerchant('users')) {
             return false;
         }
+
         return $user->hasPermissionTo(
             'users.view',
             $guard
         );
     }
 
-    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
-{
-    $user = Filament::auth()->user();
-    $query = parent::getEloquentQuery();
+    public static function getEloquentQuery(): Builder
+    {
+        $user = Filament::auth()->user();
+        $query = parent::getEloquentQuery();
 
-    // Scope to merchant
-    $query->where('merchant_id', $user->merchant_id ?? $user->id);
+        // Scope to merchant
+        $query->where('merchant_id', $user->merchant_id ?? $user->id);
 
-    // If logged in user is Admin, hide other Admin accounts
-    // Admin cannot see the merchant account (merchants are in a different table)
-    // But hide users with Admin role from being seen by non-admin staff
-    $isAdmin = $user->hasRole('Admin', 'merchant');
+        // If logged in user is Admin, hide other Admin accounts
+        // Admin cannot see the merchant account (merchants are in a different table)
+        // But hide users with Admin role from being seen by non-admin staff
+        $isAdmin = $user->hasRole('Admin', 'merchant');
 
-    if (! $isAdmin) {
-        // Non-admin staff cannot see Admin accounts
-        $adminRoleId = \DB::table('roles')
-            ->where('name', 'Admin')
-            ->where('guard_name', 'merchant')
-            ->value('id');
+        if (! $isAdmin) {
+            // Non-admin staff cannot see Admin accounts
+            $adminRoleId = \DB::table('roles')
+                ->where('name', 'Admin')
+                ->where('guard_name', 'merchant')
+                ->value('id');
 
-        if ($adminRoleId) {
-            $adminUserIds = \DB::table('model_has_roles')
-                ->where('role_id', $adminRoleId)
-                ->where('model_type', 'App\\Models\\User')
-                ->pluck('model_id');
+            if ($adminRoleId) {
+                $adminUserIds = \DB::table('model_has_roles')
+                    ->where('role_id', $adminRoleId)
+                    ->where('model_type', 'App\\Models\\User')
+                    ->pluck('model_id');
 
-            $query->whereNotIn('id', $adminUserIds);
+                $query->whereNotIn('id', $adminUserIds);
+            }
         }
-    }
 
-    return $query;
-}
+        return $query;
+    }
 
     public static function form(Schema $schema): Schema
     {

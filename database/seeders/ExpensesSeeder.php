@@ -16,7 +16,7 @@ class ExpensesSeeder extends Seeder
     public function run(): void
     {
         $merchants = Merchant::whereIn('email', [
-            'info@flowdesk.com',
+            'info@evergreen.com',
             'info@halaynoor.com',
         ])->get();
 

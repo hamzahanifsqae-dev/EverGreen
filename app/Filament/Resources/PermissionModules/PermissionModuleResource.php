@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\PermissionModules;
 
+use App\Filament\Concerns\HasUiModuleVisibility;
 use App\Filament\Resources\PermissionModules\Pages\CreatePermissionModule;
 use App\Filament\Resources\PermissionModules\Pages\EditPermissionModule;
 use App\Filament\Resources\PermissionModules\Pages\ListPermissionModules;
@@ -17,6 +18,13 @@ use Filament\Tables\Table;
 
 class PermissionModuleResource extends Resource
 {
+    use HasUiModuleVisibility;
+
+    protected static function uiModuleKey(): ?string
+    {
+        return 'permission_modules';
+    }
+
     protected static ?string $model = PermissionModule::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::Key;
@@ -24,6 +32,7 @@ class PermissionModuleResource extends Resource
     protected static string|\UnitEnum|null $navigationGroup = 'Configurations';
 
     protected static ?int $navigationSort = 8;
+
     protected static ?string $recordTitleAttribute = 'PermissionModule';
 
     public static function canViewAny(): bool

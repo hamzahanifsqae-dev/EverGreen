@@ -8,19 +8,43 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasColumn('merchants', 'primary_contact_number')) {
+            Schema::table('merchants', function (Blueprint $table) {
+                $table->dropUnique(['primary_contact_number']);
+            });
+        }
+
+        if (Schema::hasColumn('merchants', 'primary_contact_email')) {
+            try {
+                Schema::table('merchants', function (Blueprint $table) {
+                    $table->dropUnique(['primary_contact_email']);
+                });
+            } catch (Throwable) {
+                // Index may not exist on some databases.
+            }
+        }
+
         Schema::table('merchants', function (Blueprint $table) {
+            $columns = [];
+
             if (Schema::hasColumn('merchants', 'primary_contact_name')) {
-                $table->dropColumn('primary_contact_name');
+                $columns[] = 'primary_contact_name';
             }
 
             if (Schema::hasColumn('merchants', 'primary_contact_number')) {
-                $table->dropColumn('primary_contact_number');
+                $columns[] = 'primary_contact_number';
             }
 
-            if (Schema::hasColumn('merchants', 'primary_contact_email')) {
-                $table->renameColumn('primary_contact_email', 'email');
+            if ($columns !== []) {
+                $table->dropColumn($columns);
             }
         });
+
+        if (Schema::hasColumn('merchants', 'primary_contact_email')) {
+            Schema::table('merchants', function (Blueprint $table) {
+                $table->renameColumn('primary_contact_email', 'email');
+            });
+        }
     }
 
     public function down(): void
@@ -28,7 +52,6 @@ return new class extends Migration
         Schema::table('merchants', function (Blueprint $table) {
             $table->string('primary_contact_name')->nullable();
             $table->string('primary_contact_number')->nullable()->unique();
-
             $table->renameColumn('email', 'primary_contact_email');
         });
     }

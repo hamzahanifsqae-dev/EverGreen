@@ -173,7 +173,7 @@ class CustomersSeederfinal extends Seeder
         }
 
         $merchants = Merchant::whereIn('email', [
-            'info@flowdesk.com',
+            'info@evergreen.com',
             'info@halaynoor.com',
         ])->get();
 

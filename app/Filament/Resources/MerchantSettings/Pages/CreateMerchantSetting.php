@@ -12,10 +12,16 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateMerchantSetting extends CreateRecord
 {
     protected static string $resource = MerchantSettingResource::class;
+
     protected static ?string $title = 'Merchant Settings';
 
     /** Holds the processed logo path captured before create (Filament moves file during getState()) */
     private ?string $pendingLogoPath = null;
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 
     protected function getFormActions(): array
     {
@@ -42,9 +48,10 @@ class CreateMerchantSetting extends CreateRecord
                 $this->redirect(
                     static::getResource()::getUrl('edit', [
                         'record' => $existing,
-                        'panel'  => 'merchant',
+                        'panel' => 'merchant',
                     ])
                 );
+
                 return;
             }
         }
@@ -79,16 +86,18 @@ class CreateMerchantSetting extends CreateRecord
     protected function afterCreate(): void
     {
         $merchant = auth('merchant')->user();
-        if (! $merchant) return;
+        if (! $merchant) {
+            return;
+        }
 
         /* ── MERCHANT LOGO ── */
         if ($this->pendingLogoPath) {
             $merchant->logo()?->delete();
             $merchant->logo()->create([
                 'merchant_id' => $merchant->id,
-                'type'        => AttachmentType::IMAGE,
-                'meta_type'   => AttachmentMetaType::MERCHANT_LOGO,
-                'photo_url'   => $this->pendingLogoPath,
+                'type' => AttachmentType::IMAGE,
+                'meta_type' => AttachmentMetaType::MERCHANT_LOGO,
+                'photo_url' => $this->pendingLogoPath,
             ]);
         }
 

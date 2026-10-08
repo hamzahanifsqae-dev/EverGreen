@@ -9,26 +9,38 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('notification_templates', function (Blueprint $table) {
-            $table->json('channels')->nullable()->after('events');
-        });
-
-        DB::table('notification_templates')
-            ->select(['id', 'channel'])
-            ->orderBy('id')
-            ->each(function (object $row): void {
-                if (! filled($row->channel ?? null)) {
-                    return;
-                }
-
-                DB::table('notification_templates')
-                    ->where('id', $row->id)
-                    ->update(['channels' => json_encode([$row->channel])]);
+        if (! Schema::hasColumn('notification_templates', 'channels')) {
+            Schema::table('notification_templates', function (Blueprint $table) {
+                $table->json('channels')->nullable()->after('events');
             });
+        }
 
-        Schema::table('notification_templates', function (Blueprint $table) {
-            $table->dropColumn('channel');
-        });
+        if (Schema::hasColumn('notification_templates', 'channel')) {
+            DB::table('notification_templates')
+                ->select(['id', 'channel'])
+                ->orderBy('id')
+                ->each(function (object $row): void {
+                    if (! filled($row->channel ?? null)) {
+                        return;
+                    }
+
+                    DB::table('notification_templates')
+                        ->where('id', $row->id)
+                        ->update(['channels' => json_encode([$row->channel])]);
+                });
+
+            try {
+                Schema::table('notification_templates', function (Blueprint $table) {
+                    $table->dropIndex('notification_templates_channel_index');
+                });
+            } catch (Throwable) {
+                // Index name may differ by driver.
+            }
+
+            Schema::table('notification_templates', function (Blueprint $table) {
+                $table->dropColumn('channel');
+            });
+        }
     }
 
     public function down(): void

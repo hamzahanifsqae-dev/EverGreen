@@ -50,13 +50,14 @@ class UserPanelProvider extends PanelProvider
                 return asset(config('branding.logo'));
             })
             ->brandName(fn () => Filament::auth()->user()?->merchant?->name ?? config('branding.name'))
-            ->darkModeBrandLogo(asset('images/flowdesk-logo-dark.svg'))
+            ->darkModeBrandLogo(asset(config('branding.logo_dark')))
             ->viteTheme('resources/css/filament/merchant/theme.css')
             ->navigationGroups([
                 'Procurement',
                 'Inventory',
                 'Assets',
                 'Reportings',
+                'Cold Storage',
                 'Configurations',
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
@@ -64,6 +65,8 @@ class UserPanelProvider extends PanelProvider
             ->pages([
                 Dashboard::class,
             ])
+            ->resourceCreatePageRedirect('index')
+            ->resourceEditPageRedirect('index')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([])
             ->middleware([
@@ -103,6 +106,10 @@ class UserPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::AUTH_LOGIN_FORM_AFTER,
                 fn () => view('filament.auth.forgot-password-link')
+            )
+            ->renderHook(
+                PanelsRenderHook::AUTH_LOGIN_FORM_AFTER,
+                fn () => view('filament.auth.alternate-login-link')
             )
             ->renderHook(
                 'panels::body.end',

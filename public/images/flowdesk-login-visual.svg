@@ -28,9 +28,10 @@
     <rect x="-28" y="-72" width="56" height="56" rx="14" fill="url(#mark)"/>
     <path d="M-12 -44h24M-12 -52h32M-12 -36h20" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round"/>
 
-    <text y="24" text-anchor="middle" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="48" font-weight="700" letter-spacing="-0.025em" fill="#0f172a">Flowdesk</text>
+    <text y="16" text-anchor="middle" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="36" font-weight="700" letter-spacing="-0.025em" fill="#0f172a">EverGreen</text>
+    <text y="48" text-anchor="middle" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="18" font-weight="600" letter-spacing="0.02em" fill="#334155">Cold Storage</text>
 
-    <line x1="-88" y1="48" x2="88" y2="48" stroke="url(#line)" stroke-width="1"/>
-    <text y="78" text-anchor="middle" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="14" font-weight="500" letter-spacing="0.06em" fill="#64748b">CRM · POS · INVENTORY</text>
+    <line x1="-88" y1="68" x2="88" y2="68" stroke="url(#line)" stroke-width="1"/>
+    <text y="92" text-anchor="middle" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="13" font-weight="500" letter-spacing="0.06em" fill="#64748b">WAREHOUSE · BILLING · OPERATIONS</text>
   </g>
 </svg>
