@@ -28,6 +28,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ColdStorageBillResource extends ColdStorageResource
 {
@@ -171,6 +172,20 @@ class ColdStorageBillResource extends ColdStorageResource
                             TextEntry::make('rate')->money(config('cold-storage.currency')),
                         ]),
                 ]),
+            Section::make('Payments received')
+                ->columnSpanFull()
+                ->visible(fn ($record): bool => $record->payments->isNotEmpty())
+                ->schema([
+                    RepeatableEntry::make('payments')
+                        ->columnSpanFull()
+                        ->columns(4)
+                        ->schema([
+                            TextEntry::make('payment_date')->date('d/m/Y')->label('Date'),
+                            TextEntry::make('amount')->money(config('cold-storage.currency')),
+                            TextEntry::make('method')->badge(),
+                            TextEntry::make('reference_no')->label('Reference'),
+                        ]),
+                ]),
         ]);
     }
 
@@ -183,6 +198,7 @@ class ColdStorageBillResource extends ColdStorageResource
             TextColumn::make('period_start')->date('d/m/Y')->sortable(),
             TextColumn::make('period_end')->date('d/m/Y'),
             TextColumn::make('total_amount')->money(config('cold-storage.currency'))->sortable(),
+            TextColumn::make('paid_amount')->money(config('cold-storage.currency'))->sortable()->toggleable(),
             TextColumn::make('due_amount')->money(config('cold-storage.currency'))->sortable(),
             TextColumn::make('status')->badge(),
         ])->recordActions([
@@ -191,6 +207,11 @@ class ColdStorageBillResource extends ColdStorageResource
                 ->visible(fn (ColdStorageBill $record): bool => static::canEdit($record)),
             ColdStorageActions::invoice(),
         ])->defaultSort('period_start', 'desc');
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->with(['payments']);
     }
 
     public static function getPages(): array
