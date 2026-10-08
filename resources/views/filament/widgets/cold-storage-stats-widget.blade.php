@@ -87,7 +87,7 @@
                 <div class="rounded-2xl bg-gradient-to-br from-blue-50 to-white p-5 shadow-sm ring-1 ring-blue-100 stats-panel stats-panel-blue dark:from-slate-950 dark:to-slate-950 dark:ring-blue-900/50">
                     <div class="flex items-center justify-between">
                         <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">Receiving</p>
-                        <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-600 dark:bg-blue-900/40 dark:text-blue-200">Inbound</span>
+                        <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-600 dark:bg-blue-900/40 dark:text-blue-200">IN</span>
                     </div>
                     <p class="mt-4 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ number_format((float) ($stats['receipt_packages'] ?? 0), 2) }}</p>
                     <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Packages received (posted)</p>
@@ -105,8 +105,8 @@
 
                 <div class="rounded-2xl bg-gradient-to-br from-emerald-50 to-white p-5 shadow-sm ring-1 ring-emerald-100 stats-panel stats-panel-emerald dark:from-slate-950 dark:to-slate-950 dark:ring-emerald-900/50">
                     <div class="flex items-center justify-between">
-                        <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">Dispatch</p>
-                        <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-200">Outbound</span>
+                        <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">Return</p>
+                        <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-200">OUT</span>
                     </div>
                     <p class="mt-4 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ number_format((float) ($stats['dispatch_packages'] ?? 0), 2) }}</p>
                     <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Packages dispatched (posted)</p>
