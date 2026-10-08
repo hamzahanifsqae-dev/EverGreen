@@ -16,6 +16,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Schemas\Components\Grid;
 
 class ListColdStorageBills extends ListRecords
 {
@@ -33,44 +34,45 @@ class ListColdStorageBills extends ListRecords
                 ->modalWidth('lg')
                 ->visible(fn (): bool => UiModules::enabled('cold_storage_quick_bill') && ColdStorageAccess::can('create'))
                 ->schema([
-                    Select::make('branch_id')
-                        ->label('Branch')
-                        ->options(fn (): array => ColdStorageAccess::branchOptions())
-                        ->searchable()
-                        ->preload()
-                        ->required(),
-                    Select::make('customer_id')
-                        ->label('Customer')
-                        ->options(fn (): array => ColdStorageAccess::customerOptions())
-                        ->searchable()
-                        ->preload()
-                        ->required(),
-                    DatePicker::make('period_start')
-                        ->label('Period start')
-                        ->required()
-                        ->default(now()->startOfMonth())
-                        ->displayFormat('d/m/Y')
-                        ->native(false),
-                    DatePicker::make('period_end')
-                        ->label('Period end')
-                        ->required()
-                        ->default(now())
-                        ->displayFormat('d/m/Y')
-                        ->native(false)
-                        ->minDate(fn (callable $get) => $get('period_start')),
-                    Select::make('charge_basis')
-                        ->label('Charge basis')
-                        ->options(ColdStorageChargeBasis::options())
-                        ->required()
-                        ->default(ColdStorageChargeBasis::Bag->value),
-                    Select::make('charge_period')
-                        ->label('Charge period')
-                        ->options(ColdStorageChargePeriod::options())
-                        ->required()
-                        ->default(ColdStorageChargePeriod::Daily->value),
-                    Textarea::make('notes')->rows(2)->columnSpanFull(),
+                    Grid::make(2)->schema([
+                        Select::make('branch_id')
+                            ->label('Branch')
+                            ->options(fn (): array => ColdStorageAccess::branchOptions())
+                            ->searchable()
+                            ->preload()
+                            ->required(),
+                        Select::make('customer_id')
+                            ->label('Customer')
+                            ->options(fn (): array => ColdStorageAccess::customerOptions())
+                            ->searchable()
+                            ->preload()
+                            ->required(),
+                        DatePicker::make('period_start')
+                            ->label('Period start')
+                            ->required()
+                            ->default(now()->startOfMonth())
+                            ->displayFormat('d/m/Y')
+                            ->native(false),
+                        DatePicker::make('period_end')
+                            ->label('Period end')
+                            ->required()
+                            ->default(now())
+                            ->displayFormat('d/m/Y')
+                            ->native(false)
+                            ->minDate(fn (callable $get) => $get('period_start')),
+                        Select::make('charge_basis')
+                            ->label('Charge basis')
+                            ->options(ColdStorageChargeBasis::options())
+                            ->required()
+                            ->default(ColdStorageChargeBasis::Bag->value),
+                        Select::make('charge_period')
+                            ->label('Charge period')
+                            ->options(ColdStorageChargePeriod::options())
+                            ->required()
+                            ->default(ColdStorageChargePeriod::Daily->value),
+                        Textarea::make('notes')->rows(2)->columnSpanFull(),
+                    ]),
                 ])
-                ->columns(2)
                 ->action(function (array $data, BillingService $billing): void {
                     try {
                         $bill = $billing->createDraftFromStock($data, ColdStorageAccess::actorId());
