@@ -5,29 +5,29 @@ namespace App\Filament\Resources\Customers\Tables;
 use App\Filament\Exports\CustomerSalesExport;
 use App\Filament\Resources\Customers\CustomerResource;
 use App\Models\Branch;
-use App\Models\Business;
 use App\Models\CashFlow;
 use App\Models\Customer;
+use App\Models\Merchant;
 use App\Models\Sale;
+use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Facades\Filament;
-use Filament\Notifications\Notification;
 use Filament\Forms\Components\DatePicker;
-
 use Filament\Forms\Components\Select;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Grid;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
 class CustomersTable
@@ -54,6 +54,7 @@ class CustomersTable
                     ->formatStateUsing(fn ($state) => number_format((float) $state, 2))
                     ->getStateUsing(function (Customer $record, $livewire) {
                         $branchIds = $livewire->getTableFilterState('branch_id')['values'] ?? [];
+
                         return self::customerLedgerTotals($record, $branchIds)['total_amount'];
                     })
                     ->sortable(),
@@ -64,6 +65,7 @@ class CustomersTable
                     ->formatStateUsing(fn ($state) => number_format((float) $state, 2))
                     ->getStateUsing(function (Customer $record, $livewire) {
                         $branchIds = $livewire->getTableFilterState('branch_id')['values'] ?? [];
+
                         return self::customerLedgerTotals($record, $branchIds)['amount_paid'];
                     }),
 
@@ -73,6 +75,7 @@ class CustomersTable
                     ->formatStateUsing(fn ($state) => number_format((float) $state, 2))
                     ->getStateUsing(function (Customer $record, $livewire) {
                         $branchIds = $livewire->getTableFilterState('branch_id')['values'] ?? [];
+
                         return self::customerLedgerTotals($record, $branchIds)['amount_pending'];
                     }),
                 TextColumn::make('occupation')
@@ -116,9 +119,9 @@ class CustomersTable
                         $user = Filament::auth()->user();
 
                         $merchantId = match (true) {
-                            $user instanceof \App\Models\Merchant => $user->id,
-                            $user instanceof \App\Models\User     => $user->merchant_id,
-                            default                               => null,
+                            $user instanceof Merchant => $user->id,
+                            $user instanceof User => $user->merchant_id,
+                            default => null,
                         };
 
                         if (! $merchantId) {
@@ -129,9 +132,8 @@ class CustomersTable
                             ->withoutTrashed()
                             ->where('merchant_id', $merchantId);
 
-                        if ($user instanceof \App\Models\User) {
-                            $query->whereHas('users', fn ($q) =>
-                                $q->where('users.id', $user->id)
+                        if ($user instanceof User) {
+                            $query->whereHas('users', fn ($q) => $q->where('users.id', $user->id)
                             );
                         }
 
@@ -142,18 +144,16 @@ class CustomersTable
                             return;
                         }
 
-                        $query->whereHas('branches', fn ($q) =>
-                            $q->whereIn('branches.id', $data['values'])
+                        $query->whereHas('branches', fn ($q) => $q->whereIn('branches.id', $data['values'])
                         );
                     }),
             ])
-            ->recordUrl(fn (Customer $record) =>
-            auth(Filament::getCurrentPanel()->getAuthGuard())
+            ->recordUrl(fn (Customer $record) => auth(Filament::getCurrentPanel()->getAuthGuard())
                 ->user()
                 ?->hasPermissionTo('customers.view', Filament::getCurrentPanel()->getAuthGuard())
-                ? CustomerResource::getUrl('sales', [
-                'record' => $record,
-            ])
+                ? CustomerResource::getUrl('cold-storage', [
+                    'record' => $record,
+                ])
                 : null
             )
 
@@ -171,7 +171,7 @@ class CustomersTable
                                     ->label('Export Format')
                                     ->options([
                                         'excel' => 'Excel (.xlsx)',
-                                        'pdf'   => 'PDF (.pdf)',
+                                        'pdf' => 'PDF (.pdf)',
                                     ])
                                     ->default('excel')
                                     ->required()
@@ -196,16 +196,15 @@ class CustomersTable
                         $user = Filament::auth()->user();
 
                         $merchantId = match (true) {
-                            $user instanceof \App\Models\Merchant => $user->id,
-                            $user instanceof \App\Models\User     => $user->merchant_id,
-                            default                               => null,
+                            $user instanceof Merchant => $user->id,
+                            $user instanceof User => $user->merchant_id,
+                            default => null,
                         };
 
                         $baseQuery = Sale::query()
                             ->withoutTrashed()
                             ->where('customer_id', $record->id)
-                            ->when($merchantId, fn ($q) =>
-                                $q->where('merchant_id', $merchantId)
+                            ->when($merchantId, fn ($q) => $q->where('merchant_id', $merchantId)
                             )
                             ->when(
                                 filled($data['date_from'] ?? null),
@@ -216,13 +215,11 @@ class CustomersTable
                                 fn ($q) => $q->whereDate('sale_date', '<=', $data['date_to'])
                             );
 
-                        if ($user instanceof \App\Models\User) {
+                        if ($user instanceof User) {
                             $baseQuery
-                                ->whereHas('items.business.users', fn ($q) =>
-                                    $q->where('users.id', $user->id)
+                                ->whereHas('items.business.users', fn ($q) => $q->where('users.id', $user->id)
                                 )
-                                ->whereHas('items.branch.users', fn ($q) =>
-                                    $q->where('users.id', $user->id)
+                                ->whereHas('items.branch.users', fn ($q) => $q->where('users.id', $user->id)
                                 );
                         }
 
@@ -249,7 +246,7 @@ class CustomersTable
                         }
                         $merchantLogoDataUri = null;
                         if ($merchantId && extension_loaded('gd')) {
-                            $merchant = \App\Models\Merchant::query()
+                            $merchant = Merchant::query()
                                 ->with('logo')
                                 ->find($merchantId);
                             $logoPath = $merchant?->logo?->photo_url;
@@ -260,7 +257,7 @@ class CustomersTable
                                     $contents = file_get_contents($absolutePath);
                                     if ($contents !== false) {
                                         $mime = mime_content_type($absolutePath) ?: 'image/png';
-                                        $merchantLogoDataUri = 'data:' . $mime . ';base64,' . base64_encode($contents);
+                                        $merchantLogoDataUri = 'data:'.$mime.';base64,'.base64_encode($contents);
                                     }
                                 } catch (\Throwable) {
                                     $merchantLogoDataUri = null;
@@ -309,7 +306,7 @@ class CustomersTable
                                 ->output();
 
                             return response()->streamDownload(
-                                fn () => print($pdfContent),
+                                fn () => print ($pdfContent),
                                 "customer-sales-{$safeName}-{$timestamp}.pdf",
                                 ['Content-Type' => 'application/pdf']
                             );
@@ -388,7 +385,7 @@ class CustomersTable
     {
         static $cache = [];
 
-        $cacheKey = $record->id . '|' . implode(',', $branchIds);
+        $cacheKey = $record->id.'|'.implode(',', $branchIds);
         if (isset($cache[$cacheKey])) {
             return $cache[$cacheKey];
         }
@@ -428,7 +425,7 @@ class CustomersTable
 
             $cashFlowQuery->where(function ($q) use ($branchOriginalIds) {
                 $q->whereIn('id', $branchOriginalIds)
-                  ->orWhereIn('settlement_for_id', $branchOriginalIds);
+                    ->orWhereIn('settlement_for_id', $branchOriginalIds);
             });
         }
 

@@ -28,6 +28,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class ColdStorageReceiptResource extends ColdStorageResource
@@ -240,6 +241,12 @@ class ColdStorageReceiptResource extends ColdStorageResource
             TextColumn::make('branch.name')->label('Branch'),
             TextColumn::make('vehicle_number')->label('Vehicle')->toggleable(isToggledHiddenByDefault: true),
             TextColumn::make('status')->badge(),
+        ])->filters([
+            SelectFilter::make('customer_id')
+                ->label('Customer')
+                ->options(fn (): array => ColdStorageAccess::customerOptions())
+                ->searchable()
+                ->preload(),
         ])->recordActions([
             ViewAction::make(),
             EditAction::make()
