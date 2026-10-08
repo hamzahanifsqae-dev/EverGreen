@@ -1,5 +1,20 @@
 [phases.setup]
-nixPkgs = ["php83", "php83Extensions.pdo", "php83Extensions.pdo_mysql", "php83Extensions.mbstring", "php83Extensions.tokenizer", "php83Extensions.xml", "php83Extensions.ctype", "php83Extensions.json", "php83Extensions.bcmath", "php83Extensions.fileinfo", "php83Extensions.openssl", "php83Extensions.gd", "php83Extensions.zip", "php83Packages.composer", "nodejs_22", "npm-10_x"]
+nixPkgs = [
+  "php83",
+  "php83Extensions.pdo",
+  "php83Extensions.pdo_mysql",
+  "php83Extensions.mbstring",
+  "php83Extensions.tokenizer",
+  "php83Extensions.xml",
+  "php83Extensions.ctype",
+  "php83Extensions.bcmath",
+  "php83Extensions.fileinfo",
+  "php83Extensions.openssl",
+  "php83Extensions.gd",
+  "php83Extensions.zip",
+  "php83Packages.composer",
+  "nodejs_22"
+]
 
 [phases.install]
 cmds = [
@@ -10,7 +25,7 @@ cmds = [
 [phases.build]
 cmds = [
   "npm run build",
-  "mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache",
+  "mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache",
   "chmod -R ug+rwx storage bootstrap/cache"
 ]
 
