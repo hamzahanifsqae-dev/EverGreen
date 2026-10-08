@@ -177,7 +177,8 @@ class ColdStorageReservationResource extends ColdStorageResource
             ])
             ->recordActions([
                 ViewAction::make(),
-                EditAction::make(),
+                EditAction::make()
+                    ->visible(fn (ColdStorageReservation $record): bool => static::canEdit($record)),
             ])
             ->defaultSort('reserved_from', 'desc')
             ->emptyStateHeading('No reservations yet')

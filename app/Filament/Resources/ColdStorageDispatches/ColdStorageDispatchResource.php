@@ -184,7 +184,8 @@ class ColdStorageDispatchResource extends ColdStorageResource
             TextColumn::make('status')->badge(),
         ])->recordActions([
             ViewAction::make(),
-            EditAction::make(),
+            EditAction::make()
+                ->visible(fn (ColdStorageDispatch $record): bool => static::canEdit($record)),
         ])->defaultSort('dispatched_on', 'desc');
     }
 

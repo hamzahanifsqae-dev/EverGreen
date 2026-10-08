@@ -185,7 +185,8 @@ class ColdStorageAdjustmentResource extends ColdStorageResource
             TextColumn::make('status')->badge(),
         ])->recordActions([
             ViewAction::make(),
-            EditAction::make(),
+            EditAction::make()
+                ->visible(fn (ColdStorageAdjustment $record): bool => static::canEdit($record)),
         ])->defaultSort('adjusted_on', 'desc');
     }
 

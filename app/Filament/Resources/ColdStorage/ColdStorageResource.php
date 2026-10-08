@@ -32,11 +32,7 @@ abstract class ColdStorageResource extends Resource
             return false;
         }
 
-        if (isset($record->status)) {
-            return $record->status === 'draft';
-        }
-
-        return true;
+        return static::recordAllowsEditing($record);
     }
 
     public static function canDelete($record): bool
@@ -45,6 +41,11 @@ abstract class ColdStorageResource extends Resource
             return false;
         }
 
+        return static::recordAllowsEditing($record);
+    }
+
+    public static function recordAllowsEditing($record): bool
+    {
         if (isset($record->status)) {
             return $record->status === 'draft';
         }

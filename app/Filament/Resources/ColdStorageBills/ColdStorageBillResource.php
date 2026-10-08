@@ -186,7 +186,8 @@ class ColdStorageBillResource extends ColdStorageResource
             TextColumn::make('status')->badge(),
         ])->recordActions([
             ViewAction::make(),
-            EditAction::make(),
+            EditAction::make()
+                ->visible(fn (ColdStorageBill $record): bool => static::canEdit($record)),
         ])->defaultSort('period_start', 'desc');
     }
 

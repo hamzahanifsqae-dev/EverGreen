@@ -242,7 +242,8 @@ class ColdStorageReceiptResource extends ColdStorageResource
             TextColumn::make('status')->badge(),
         ])->recordActions([
             ViewAction::make(),
-            EditAction::make(),
+            EditAction::make()
+                ->visible(fn (ColdStorageReceipt $record): bool => static::canEdit($record)),
         ])->defaultSort('received_on', 'desc');
     }
 
