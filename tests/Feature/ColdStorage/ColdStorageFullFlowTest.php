@@ -183,7 +183,7 @@ class ColdStorageFullFlowTest extends TestCase
             $posted,
             min(100, (float) $posted->due_amount),
             now()->toDateString(),
-            'cash',
+            'cash_in_hand',
             null,
         );
         $this->assertGreaterThan(0, (float) $posted->refresh()->paid_amount);
@@ -235,6 +235,8 @@ class ColdStorageFullFlowTest extends TestCase
             'city' => 'Lahore',
             'status' => Merchant::STATUS_VERIFIED,
             'is_active' => true,
+            'cash_in_hand' => 0,
+            'cash_in_bank' => 0,
         ]);
         $business = Business::query()->create([
             'merchant_id' => $merchant->id,
@@ -352,6 +354,8 @@ class ColdStorageFullFlowTest extends TestCase
             $table->string('city')->nullable();
             $table->string('status')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->decimal('cash_in_hand', 18, 2)->nullable();
+            $table->decimal('cash_in_bank', 18, 2)->nullable();
             $table->timestamps();
         });
 

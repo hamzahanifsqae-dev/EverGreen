@@ -66,26 +66,26 @@ class ViewColdStorageBill extends ViewRecord
                         ->displayFormat('d/m/Y')
                         ->default(now()),
                     Select::make('method')
-                        ->label('Method')
+                        ->label('Received into')
                         ->options([
-                            'cash' => 'Cash',
-                            'bank_transfer' => 'Bank transfer',
-                            'cheque' => 'Cheque',
-                            'card' => 'Card',
-                            'other' => 'Other',
+                            'cash_in_hand' => 'Cash in hand',
+                            'cash_in_bank' => 'Bank',
                         ])
                         ->required()
-                        ->default('cash'),
+                        ->default('cash_in_hand')
+                        ->helperText('This amount is added to the selected cash account.'),
                 ])
                 ->action(function (array $data, BillingService $billing): void {
                     try {
                         $paymentDate = Carbon::parse($data['payment_date'])->toDateString();
+                        $account = $billing->cashAccountForMethod((string) $data['method']);
+                        $accountLabel = $account === 'cash_in_bank' ? 'Bank' : 'Cash in hand';
 
                         $billing->recordPayment(
                             $this->record,
                             (float) $data['amount'],
                             $paymentDate,
-                            (string) $data['method'],
+                            $account,
                             ColdStorageAccess::actorId(),
                         );
 
@@ -93,7 +93,7 @@ class ViewColdStorageBill extends ViewRecord
 
                         Notification::make()
                             ->title('Payment recorded')
-                            ->body($currency.' '.number_format((float) $data['amount'], 2).' received. Due now '.$currency.' '.number_format((float) $this->record->due_amount, 2).'.')
+                            ->body($currency.' '.number_format((float) $data['amount'], 2).' added to '.$accountLabel.'. Due now '.$currency.' '.number_format((float) $this->record->due_amount, 2).'.')
                             ->success()
                             ->send();
                     } catch (ColdStorageException $exception) {

@@ -182,7 +182,13 @@ class ColdStorageBillResource extends ColdStorageResource
                         ->schema([
                             TextEntry::make('payment_date')->date('d/m/Y')->label('Date'),
                             TextEntry::make('amount')->money(config('cold-storage.currency')),
-                            TextEntry::make('method')->badge(),
+                            TextEntry::make('method')
+                                ->badge()
+                                ->formatStateUsing(fn (?string $state): string => match ($state) {
+                                    'cash', 'cash_in_hand' => 'Cash in hand',
+                                    'bank', 'bank_transfer', 'cash_in_bank' => 'Bank',
+                                    default => $state ? str_replace('_', ' ', ucfirst($state)) : '—',
+                                }),
                             TextEntry::make('reference_no')->label('Reference'),
                         ]),
                 ]),

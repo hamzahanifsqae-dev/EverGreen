@@ -10,6 +10,7 @@ use App\Models\ColdStorageMovement;
 use App\Models\ColdStorageRateCard;
 use App\Models\ColdStorageReceiptItem;
 use App\Models\Customer;
+use App\Models\Merchant;
 use App\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -190,6 +191,8 @@ class BillingService
                 throw ColdStorageException::make('Payment cannot exceed the outstanding balance.');
             }
 
+            $account = $this->cashAccountForMethod($method);
+
             $payment = $bill->payments()->create([
                 'merchant_id' => $bill->merchant_id,
                 'party_type' => Customer::class,
@@ -198,7 +201,7 @@ class BillingService
                 'entry_type' => 'payment',
                 'amount' => $amount,
                 'payment_date' => $date,
-                'method' => $method,
+                'method' => $account,
                 'reference_no' => $bill->bill_no,
                 'notes' => 'Cold storage bill '.$bill->bill_no,
                 'created_by' => $actorId,
@@ -211,8 +214,25 @@ class BillingService
                 'due_amount' => round(max(0, (float) $bill->total_amount - $paid), 2),
             ]);
 
+            $merchant = Merchant::query()->whereKey($bill->merchant_id)->lockForUpdate()->firstOrFail();
+            $merchant->update([
+                $account => round((float) ($merchant->{$account} ?? 0) + $amount, 2),
+            ]);
+
             return $payment;
         });
+    }
+
+    /**
+     * Map a recorded payment method to the merchant cash account column.
+     */
+    public function cashAccountForMethod(?string $method): string
+    {
+        return match ($method) {
+            'cash', 'cash_in_hand' => 'cash_in_hand',
+            'bank', 'bank_transfer', 'cash_in_bank' => 'cash_in_bank',
+            default => throw ColdStorageException::make('Select Cash in hand or Bank for this payment.'),
+        };
     }
 
     public function serviceAmount(string $basis, float $quantity, float $rate): float

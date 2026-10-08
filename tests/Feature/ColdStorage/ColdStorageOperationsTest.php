@@ -271,13 +271,39 @@ class ColdStorageOperationsTest extends TestCase
         ]);
 
         $posted = app(BillingService::class)->post($bill, null);
-        app(BillingService::class)->recordPayment($posted, 50, now()->toDateString(), 'cash', null);
+        app(BillingService::class)->recordPayment($posted, 50, now()->toDateString(), 'cash_in_hand', null);
 
         $this->assertSame(170.0, (float) $posted->refresh()->total_amount);
         $this->assertSame(120.0, (float) $posted->due_amount);
         $this->assertSame(1, $posted->payments()->count());
+        $this->assertSame('cash_in_hand', $posted->payments()->value('method'));
         $this->assertSame(0, Sale::query()->count());
         $this->assertSame(2.0, $this->balance($world)['packages']);
+    }
+
+    public function test_storage_bill_payment_credits_cash_in_hand_or_bank(): void
+    {
+        $world = $this->storeGoods(packages: 2, weight: 20, on: now()->toDateString());
+        $this->rate($world, 10, billArrival: true);
+        $bill = $this->bill($world, now()->toDateString(), now()->toDateString());
+
+        $posted = app(BillingService::class)->post($bill, null);
+        $this->assertSame(20.0, (float) $posted->due_amount);
+
+        $billing = app(BillingService::class);
+        $billing->recordPayment($posted, 12, now()->toDateString(), 'cash_in_hand', null);
+        $billing->recordPayment($posted->refresh(), 8, now()->toDateString(), 'cash_in_bank', null);
+
+        $merchant = $world['merchant']->refresh();
+
+        $this->assertSame(1012.0, (float) $merchant->cash_in_hand);
+        $this->assertSame(2008.0, (float) $merchant->cash_in_bank);
+        $this->assertSame(20.0, (float) $posted->refresh()->paid_amount);
+        $this->assertSame(0.0, (float) $posted->due_amount);
+        $this->assertSame(
+            ['cash_in_hand', 'cash_in_bank'],
+            $posted->payments()->orderBy('created_at')->pluck('method')->all(),
+        );
     }
 
     public function test_temperature_readings_flag_values_outside_the_chamber_limits(): void
@@ -517,6 +543,8 @@ class ColdStorageOperationsTest extends TestCase
             'city' => 'Lahore',
             'status' => Merchant::STATUS_VERIFIED,
             'is_active' => true,
+            'cash_in_hand' => 1000,
+            'cash_in_bank' => 2000,
         ]);
         $business = Business::query()->create([
             'merchant_id' => $merchant->id,
@@ -571,6 +599,8 @@ class ColdStorageOperationsTest extends TestCase
             $table->string('city')->nullable();
             $table->string('status')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->decimal('cash_in_hand', 18, 2)->nullable();
+            $table->decimal('cash_in_bank', 18, 2)->nullable();
             $table->timestamps();
         });
 
