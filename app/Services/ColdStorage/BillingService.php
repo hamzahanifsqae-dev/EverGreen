@@ -5,7 +5,6 @@ namespace App\Services\ColdStorage;
 use App\Exceptions\ColdStorageException;
 use App\Models\Branch;
 use App\Models\ColdStorageBill;
-use App\Models\ColdStorageBillLine;
 use App\Models\ColdStorageMovement;
 use App\Models\ColdStorageRateCard;
 use App\Models\ColdStorageReceiptItem;
@@ -99,20 +98,6 @@ class BillingService
 
             if ($preview['lines'] === [] && $preview['service_total'] <= 0) {
                 throw ColdStorageException::make('There is no storage quantity or service charge to bill for this period.');
-            }
-
-            foreach ($preview['lines'] as $line) {
-                $overlap = ColdStorageBillLine::query()
-                    ->where('receipt_item_id', $line['receipt_item_id'])
-                    ->where('period_start', '<=', $line['period_end'])
-                    ->where('period_end', '>=', $line['period_start'])
-                    ->whereHas('bill', fn ($query) => $query->where('status', 'posted'))
-                    ->lockForUpdate()
-                    ->exists();
-
-                if ($overlap) {
-                    throw ColdStorageException::make('Lot '.$line['lot_number'].' is already billed for an overlapping period.');
-                }
             }
 
             $bill->lines()->delete();

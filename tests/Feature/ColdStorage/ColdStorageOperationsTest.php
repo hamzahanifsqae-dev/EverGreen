@@ -219,7 +219,7 @@ class ColdStorageOperationsTest extends TestCase
         $this->assertSame(2, ColdStorageMovement::query()->where('reference_id', $dispatch->id)->count());
     }
 
-    public function test_rate_changes_do_not_rewrite_posted_bills_and_overlapping_periods_are_rejected(): void
+    public function test_rate_changes_do_not_rewrite_posted_bills_and_same_day_rebills_are_allowed(): void
     {
         $world = $this->storeGoods(packages: 10, weight: 100, on: now()->subDays(2)->toDateString());
         $card = $this->rate($world, 5);
@@ -233,12 +233,15 @@ class ColdStorageOperationsTest extends TestCase
         $this->assertSame(5.0, $postedRate);
         $this->assertSame(5.0, (float) ColdStorageBillLine::query()->where('bill_id', $bill->id)->value('rate'));
 
-        $duplicate = $this->bill($world, now()->subDays(2)->toDateString(), now()->toDateString(), 'SB-2');
+        $this->dispatchGoods($world, packages: 5, weight: 50);
 
-        $this->expectException(ColdStorageException::class);
-        $this->expectExceptionMessage('already billed');
+        $rebill = $this->bill($world, now()->subDays(2)->toDateString(), now()->toDateString(), 'SB-2');
+        $postedRebill = app(BillingService::class)->post($rebill, null);
 
-        app(BillingService::class)->post($duplicate, null);
+        $this->assertSame('posted', $postedRebill->status);
+        $this->assertGreaterThan(0, (float) $postedRebill->total_amount);
+        $this->assertSame(5.0, (float) ColdStorageBillLine::query()->where('bill_id', $bill->id)->value('rate'));
+        $this->assertSame(9.0, (float) ColdStorageBillLine::query()->where('bill_id', $rebill->id)->value('rate'));
     }
 
     public function test_billing_uses_remaining_quantity_and_can_exclude_the_arrival_day(): void

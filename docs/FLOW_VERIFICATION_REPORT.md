@@ -27,7 +27,7 @@
 | Transfer | PASS | Location changes; customer total unchanged |
 | Damage | PASS | Reason required; stock reduces |
 | Cancel dispatch | PASS | Stock reverses correctly |
-| Billing overlap / rates | PASS | Posted bills stay fixed; overlapping periods blocked |
+| Billing rebill / rates | PASS | Posted bills stay fixed; same-lot same-day rebills allowed |
 | Billing quantity rules | PASS | Remaining qty + arrival-day rules work |
 | Service charges | PASS | Payments do not create shop sales stock |
 | Temperature alerts | PASS | Out-of-range flagged; can acknowledge |
