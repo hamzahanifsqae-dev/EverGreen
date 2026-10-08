@@ -81,7 +81,7 @@ class ColdStorageDemoProductsSeeder extends Seeder
                         'category_id' => $root->id,
                         'sub_category_id' => $category->id,
                         'type' => 'stock',
-                        'unit' => $product['unit'],
+                        'unit' => 'pcs',
                         'track_inventory' => false,
                         'is_active' => true,
                         'purchase_price' => 0,

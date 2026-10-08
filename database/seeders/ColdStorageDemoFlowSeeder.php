@@ -85,7 +85,7 @@ class ColdStorageDemoFlowSeeder extends Seeder
                     'name' => 'Demo Potatoes',
                     'description' => 'Demo cold storage product',
                     'type' => 'stock',
-                    'unit' => 'bags',
+                    'unit' => 'pcs',
                     'purchase_price' => 0,
                     'selling_price' => 0,
                     'track_inventory' => false,
