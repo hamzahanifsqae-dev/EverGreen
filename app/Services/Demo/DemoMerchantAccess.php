@@ -7,6 +7,8 @@ use App\Models\Permission;
 use App\Models\PermissionModule;
 use App\Models\Role;
 use Database\Seeders\PermissionsModulesSeeder;
+use Database\Seeders\PermissionsSeeder;
+use Database\Seeders\RolesSeeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Spatie\Permission\PermissionRegistrar;
@@ -15,20 +17,26 @@ class DemoMerchantAccess
 {
     public function grantFullAccess(Merchant $merchant): void
     {
-        $this->ensurePermissionModulesExist();
+        $this->ensurePermissionCatalogExists();
         $this->syncAllPermissionModules($merchant);
         $this->assignAdminRoleWithAllPermissions($merchant);
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 
-    private function ensurePermissionModulesExist(): void
+    private function ensurePermissionCatalogExists(): void
     {
-        if (PermissionModule::query()->exists()) {
-            return;
+        if (PermissionModule::query()->doesntExist()) {
+            (new PermissionsModulesSeeder)->run();
         }
 
-        (new PermissionsModulesSeeder)->run();
+        if (Permission::query()->where('guard_name', 'merchant')->doesntExist()) {
+            (new PermissionsSeeder)->run();
+        }
+
+        if (Role::query()->where('guard_name', 'merchant')->doesntExist()) {
+            (new RolesSeeder)->run();
+        }
     }
 
     private function syncAllPermissionModules(Merchant $merchant): void

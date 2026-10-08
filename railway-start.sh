@@ -17,7 +17,11 @@ fi
 php artisan storage:link --force >/dev/null 2>&1 || true
 php artisan migrate --force --no-interaction
 
-# First boot demo seed
+# Permission catalog must exist BEFORE merchant access is granted
+php artisan db:seed --class=PermissionsModulesSeeder --force --no-interaction || true
+php artisan db:seed --class=PermissionsSeeder --force --no-interaction || true
+php artisan db:seed --class=RolesSeeder --force --no-interaction || true
+
 MERCHANT_COUNT="$(php artisan tinker --execute="echo \\App\\Models\\Merchant::query()->count();" 2>/dev/null | tr -d '[:space:]' || echo 0)"
 CHAMBER_COUNT="$(php artisan tinker --execute="echo \\App\\Models\\ColdStorageChamber::query()->count();" 2>/dev/null | tr -d '[:space:]' || echo 0)"
 
@@ -25,9 +29,10 @@ if [[ "${MERCHANT_COUNT}" == "0" ]]; then
   php artisan db:seed --class=CountriesSeeder --force --no-interaction || true
   php artisan db:seed --class=CitiesSeeder --force --no-interaction || true
   php artisan db:seed --class=MerchantsSeeder --force --no-interaction || true
-  php artisan db:seed --class=PermissionsSeeder --force --no-interaction || true
-  php artisan db:seed --class=RolesSeeder --force --no-interaction || true
 fi
+
+# Re-grant every boot so missing modules/permissions are healed after catalog seeds
+php artisan merchant:grant-full-access info@evergreen.com --no-interaction || true
 
 if [[ "${CHAMBER_COUNT}" == "0" ]]; then
   php artisan db:seed --class=ColdStorageDemoProductsSeeder --force --no-interaction || true
