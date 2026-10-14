@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('cold_storage_billed_entitlements')) {
+            return;
+        }
+
         Schema::create('cold_storage_billed_entitlements', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('bill_line_id')->constrained('cold_storage_bill_lines')->cascadeOnDelete();

@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasColumn('customers', 'storage_billing_preference')) {
+            return;
+        }
+
         Schema::table('customers', function (Blueprint $table) {
             // Informational only: which billing workflow a clerk should normally use
             // for this customer. Both "Storage bills > New" (periodic) and "Bill this

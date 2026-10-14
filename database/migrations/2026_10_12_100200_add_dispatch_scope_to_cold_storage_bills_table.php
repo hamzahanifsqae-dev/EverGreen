@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasColumn('cold_storage_bills', 'dispatch_id')) {
+            return;
+        }
+
         Schema::table('cold_storage_bills', function (Blueprint $table) {
             $table->foreignUuid('dispatch_id')->nullable()->after('customer_id')->constrained('cold_storage_dispatches')->nullOnDelete();
         });

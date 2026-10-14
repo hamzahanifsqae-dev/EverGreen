@@ -8,9 +8,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('payments', function (Blueprint $table) {
-            $table->decimal('unallocated_amount', 14, 2)->default(0)->after('amount');
-        });
+        if (! Schema::hasColumn('payments', 'unallocated_amount')) {
+            Schema::table('payments', function (Blueprint $table) {
+                $table->decimal('unallocated_amount', 14, 2)->default(0)->after('amount');
+            });
+        }
+
+        if (Schema::hasTable('cold_storage_bill_allocations')) {
+            return;
+        }
 
         Schema::create('cold_storage_bill_allocations', function (Blueprint $table) {
             $table->uuid('id')->primary();
