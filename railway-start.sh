@@ -17,10 +17,14 @@ fi
 php artisan storage:link --force >/dev/null 2>&1 || true
 php artisan migrate --force --no-interaction
 
-# Permission catalog must exist BEFORE merchant access is granted
+# Permission catalog must exist BEFORE merchant access is granted.
+# RolesSeeder is intentionally NOT re-run here: it unconditionally
+# overwrites every role's permissions on every call, which would wipe
+# out any edits made through the Roles & Permissions UI on each deploy.
+# merchant:grant-full-access below only seeds roles the first time none
+# exist yet (see GrantMerchantFullAccessCommand::ensurePermissionCatalogExists).
 php artisan db:seed --class=PermissionsModulesSeeder --force --no-interaction || true
 php artisan db:seed --class=PermissionsSeeder --force --no-interaction || true
-php artisan db:seed --class=RolesSeeder --force --no-interaction || true
 
 MERCHANT_COUNT="$(php artisan tinker --execute="echo \\App\\Models\\Merchant::query()->count();" 2>/dev/null | tr -d '[:space:]' || echo 0)"
 CHAMBER_COUNT="$(php artisan tinker --execute="echo \\App\\Models\\ColdStorageChamber::query()->count();" 2>/dev/null | tr -d '[:space:]' || echo 0)"

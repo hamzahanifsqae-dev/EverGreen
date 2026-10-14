@@ -85,8 +85,16 @@ class DemoMerchantAccess
             ->where('guard_name', 'merchant')
             ->pluck('name');
 
-        if ($permissionNames->isNotEmpty()) {
+        // Only seed the Admin role's permissions the first time it's created.
+        // This method runs on every boot to heal newly added permission
+        // modules; the role itself is editable afterwards through the
+        // Roles & Permissions UI, so resyncing it unconditionally here
+        // would silently wipe out any customization on every deploy.
+        if ($role->wasRecentlyCreated && $permissionNames->isNotEmpty()) {
             $role->syncPermissions($permissionNames);
+        }
+
+        if ($permissionNames->isNotEmpty()) {
             $merchant->syncPermissions($permissionNames);
         }
 
