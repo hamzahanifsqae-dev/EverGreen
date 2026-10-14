@@ -22,7 +22,6 @@ use App\Services\ColdStorage\BillingService;
 use App\Services\ColdStorage\DispatchService;
 use App\Services\ColdStorage\ReceiptService;
 use App\Services\ColdStorage\ReservationService;
-use App\Services\ColdStorage\TemperatureService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -101,9 +100,6 @@ class ColdStorageDemoFlowSeeder extends Seeder
                 'business_id' => $business->id,
                 'capacity_quantity' => 1000,
                 'capacity_unit' => 'bag',
-                'min_temperature' => -5,
-                'max_temperature' => 5,
-                'temperature_unit' => 'C',
                 'is_active' => true,
             ],
         );
@@ -194,8 +190,6 @@ class ColdStorageDemoFlowSeeder extends Seeder
         ]);
 
         app(DispatchService::class)->post($dispatch, null);
-
-        app(TemperatureService::class)->record($chamber, 8, now()->subHours(2), null, 'manual', null, 'Demo out-of-range reading');
 
         $bill = app(BillingService::class)->createDraftFromStock([
             'branch_id' => $branch->id,

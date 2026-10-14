@@ -10,7 +10,34 @@ class UiModules
             return true;
         }
 
-        return (bool) config("ui-modules.enabled.{$module}", true);
+        if ((bool) config("ui-modules.enabled.{$module}", true)) {
+            return true;
+        }
+
+        // Only the modules listed in peekableModules() can be revealed again
+        // by the "show hidden modules" checkbox in the sidebar, for the
+        // current browser session only. Everything else stays out of the UI
+        // regardless of the checkbox.
+        if (! in_array($module, self::peekableModules(), true)) {
+            return false;
+        }
+
+        return self::hiddenModulesVisible();
+    }
+
+    public static function hiddenModulesVisible(): bool
+    {
+        return (bool) session('show_hidden_modules', false);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function peekableModules(): array
+    {
+        return [
+            'cold_storage_adjustments',
+        ];
     }
 
     /**

@@ -22,7 +22,6 @@ use App\Models\Customer;
 use App\Models\Merchant;
 use App\Models\Product;
 use App\Models\Sale;
-use App\Services\ColdStorage\ActionAlertService;
 use App\Services\ColdStorage\AdjustmentService;
 use App\Services\ColdStorage\BillingService;
 use App\Services\ColdStorage\DispatchService;
@@ -30,7 +29,6 @@ use App\Services\ColdStorage\OccupancyService;
 use App\Services\ColdStorage\ReceiptService;
 use App\Services\ColdStorage\ReportService;
 use App\Services\ColdStorage\ReservationService;
-use App\Services\ColdStorage\TemperatureService;
 use App\Services\ColdStorage\TransferService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -94,14 +92,7 @@ class ColdStorageFullFlowTest extends TestCase
         $this->assertSame(15.0, $this->lotPackages($item->id, $world['location']->id));
         $this->assertSame(5.0, $this->lotPackages($item->id, $binB->id));
 
-        // 3) Temperature exception + acknowledge
-        $world['chamber']->update(['min_temperature' => -5, 'max_temperature' => 5]);
-        $reading = app(TemperatureService::class)->record($world['chamber'], 12, now()->subDays(3), null);
-        $this->assertTrue($reading->is_out_of_range);
-        app(ActionAlertService::class)->acknowledgeTemperature($reading, null);
-        $this->assertNotNull($reading->refresh()->acknowledged_at);
-
-        // 4) Partial dispatch
+        // 3) Partial dispatch
         $dispatch = ColdStorageDispatch::query()->create([
             'merchant_id' => $world['merchant']->id,
             'business_id' => $world['business']->id,
@@ -123,7 +114,7 @@ class ColdStorageFullFlowTest extends TestCase
         app(DispatchService::class)->post($dispatch, null);
         $this->assertSame(14.0, $this->lotPackages($item->id));
 
-        // 5) Damage adjustment
+        // 4) Damage adjustment
         $adjustment = ColdStorageAdjustment::query()->create([
             'merchant_id' => $world['merchant']->id,
             'business_id' => $world['business']->id,
@@ -146,7 +137,7 @@ class ColdStorageFullFlowTest extends TestCase
         app(AdjustmentService::class)->post($adjustment, null);
         $this->assertSame(13.0, $this->lotPackages($item->id));
 
-        // 6) Rate card + storage bill + payment
+        // 5) Rate card + storage bill + payment
         ColdStorageRateCard::query()->create([
             'merchant_id' => $world['merchant']->id,
             'customer_id' => $world['customer']->id,
@@ -188,7 +179,7 @@ class ColdStorageFullFlowTest extends TestCase
         );
         $this->assertGreaterThan(0, (float) $posted->refresh()->paid_amount);
 
-        // 7) Reservation booking
+        // 6) Reservation booking
         $reservation = ColdStorageReservation::query()->create([
             'merchant_id' => $world['merchant']->id,
             'business_id' => $world['business']->id,
@@ -204,7 +195,7 @@ class ColdStorageFullFlowTest extends TestCase
         app(ReservationService::class)->confirm($reservation, null);
         $this->assertSame('confirmed', $reservation->refresh()->status);
 
-        // 8) Reports / occupancy / ageing
+        // 7) Reports / occupancy / ageing
         $filters = [
             'merchant_id' => $world['merchant']->id,
             'branch_id' => $world['branch']->id,
@@ -272,8 +263,6 @@ class ColdStorageFullFlowTest extends TestCase
             'name' => 'Chamber A',
             'capacity_quantity' => 500,
             'capacity_unit' => 'bag',
-            'min_temperature' => -5,
-            'max_temperature' => 5,
             'is_active' => true,
         ]);
         $location = ColdStorageLocation::query()->create([
@@ -488,6 +477,7 @@ class ColdStorageFullFlowTest extends TestCase
             '2026_10_12_100400_create_cold_storage_opening_balances_and_stock',
             '2026_10_13_190000_drop_cold_storage_opening_balances_table',
             '2026_10_13_191000_drop_cold_storage_opening_stocks_table',
+            '2026_10_14_150000_drop_cold_storage_temperature_module',
         ] as $name) {
             (require database_path("migrations/{$name}.php"))->up();
         }

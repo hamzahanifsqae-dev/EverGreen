@@ -28,7 +28,6 @@ use App\Models\Purchase;
 use App\Models\Sale;
 use App\Models\User;
 use App\Services\ColdStorage\ActionAlertMailService;
-use App\Services\ColdStorage\ActionAlertService;
 use App\Services\ColdStorage\AdjustmentService;
 use App\Services\ColdStorage\BillingService;
 use App\Services\ColdStorage\DispatchService;
@@ -36,7 +35,6 @@ use App\Services\ColdStorage\OccupancyService;
 use App\Services\ColdStorage\ReceiptService;
 use App\Services\ColdStorage\ReportService;
 use App\Services\ColdStorage\StockRegisterService;
-use App\Services\ColdStorage\TemperatureService;
 use App\Services\ColdStorage\TransferService;
 use App\Support\ColdStorageAccess;
 use Illuminate\Database\Schema\Blueprint;
@@ -485,18 +483,6 @@ class ColdStorageOperationsTest extends TestCase
         );
     }
 
-    public function test_temperature_readings_flag_values_outside_the_chamber_limits(): void
-    {
-        $world = $this->world();
-        $chamber = $this->chamber($world);
-        $chamber->update(['min_temperature' => -20, 'max_temperature' => -10]);
-
-        $reading = app(TemperatureService::class)->record($chamber, -5, now(), null);
-
-        $this->assertTrue($reading->is_out_of_range);
-        $this->assertSame('-20.00', (string) $reading->min_temperature);
-    }
-
     public function test_occupancy_uses_the_chamber_unit_and_staff_are_limited_to_assigned_branches(): void
     {
         $world = $this->storeGoods(packages: 4, weight: 40);
@@ -932,6 +918,7 @@ class ColdStorageOperationsTest extends TestCase
             '2026_10_12_100400_create_cold_storage_opening_balances_and_stock',
             '2026_10_13_190000_drop_cold_storage_opening_balances_table',
             '2026_10_13_191000_drop_cold_storage_opening_stocks_table',
+            '2026_10_14_150000_drop_cold_storage_temperature_module',
         ] as $name) {
             (require database_path("migrations/{$name}.php"))->up();
         }
@@ -970,28 +957,12 @@ class ColdStorageOperationsTest extends TestCase
         $this->assertGreaterThan(0, $preview['total']);
     }
 
-    public function test_temperature_alert_can_be_acknowledged(): void
-    {
-        $world = $this->storeGoods();
-        $chamber = $world['chamber'];
-        $chamber->update(['min_temperature' => -5, 'max_temperature' => 5]);
-        $reading = app(TemperatureService::class)->record($chamber, 12, now(), null);
-
-        $this->assertTrue($reading->is_out_of_range);
-
-        app(ActionAlertService::class)->acknowledgeTemperature($reading, null);
-
-        $this->assertNotNull($reading->refresh()->acknowledged_at);
-    }
-
     public function test_action_alert_digest_uses_dedicated_recipient_list(): void
     {
         Mail::fake();
 
         $world = $this->storeGoods();
-        $chamber = $world['chamber'];
-        $chamber->update(['min_temperature' => -5, 'max_temperature' => 5]);
-        app(TemperatureService::class)->record($chamber, 12, now(), null);
+        $this->postedBillFixture($world, 'SB-OVERDUE', 500, now()->toDateString());
 
         $mailer = app(ActionAlertMailService::class);
         $setting = $mailer->settingsForMerchant($world['merchant']->id);

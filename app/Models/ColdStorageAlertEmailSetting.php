@@ -15,7 +15,6 @@ class ColdStorageAlertEmailSetting extends Model implements Auditable
         'merchant_id',
         'recipient_emails',
         'is_enabled',
-        'include_temperature',
         'include_bills',
         'include_reservations',
         'last_sent_at',
@@ -26,7 +25,6 @@ class ColdStorageAlertEmailSetting extends Model implements Auditable
         return [
             'recipient_emails' => 'array',
             'is_enabled' => 'boolean',
-            'include_temperature' => 'boolean',
             'include_bills' => 'boolean',
             'include_reservations' => 'boolean',
             'last_sent_at' => 'datetime',

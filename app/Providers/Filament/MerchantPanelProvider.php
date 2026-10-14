@@ -152,6 +152,10 @@ class MerchantPanelProvider extends PanelProvider
                 'panels::body.end',
                 fn () => view('filament.dashboard-product-variant-select-script')
             )
+            ->renderHook(
+                PanelsRenderHook::SIDEBAR_FOOTER,
+                fn () => view('filament.show-hidden-modules-toggle')
+            )
 
             ->globalSearch(false);
 

@@ -61,7 +61,6 @@ class ColdStorageAlertEmails extends Page implements HasForms
             $this->data = [
                 'recipient_emails' => [],
                 'is_enabled' => false,
-                'include_temperature' => true,
                 'include_bills' => true,
                 'include_reservations' => true,
             ];
@@ -74,7 +73,6 @@ class ColdStorageAlertEmails extends Page implements HasForms
         $this->data = [
             'recipient_emails' => $setting->normalizedRecipientEmails(),
             'is_enabled' => $setting->is_enabled,
-            'include_temperature' => $setting->include_temperature,
             'include_bills' => $setting->include_bills,
             'include_reservations' => $setting->include_reservations,
         ];
@@ -100,10 +98,9 @@ class ColdStorageAlertEmails extends Page implements HasForms
                             ->helperText('When enabled, open alerts are emailed once per day to the list above.'),
                     ]),
                 Section::make('Include in digest')
-                    ->columns(3)
+                    ->columns(2)
                     ->columnSpanFull()
                     ->schema([
-                        Toggle::make('include_temperature')->label('Temperature exceptions'),
                         Toggle::make('include_bills')->label('Bills with balance'),
                         Toggle::make('include_reservations')->label('Upcoming reservations'),
                     ]),
@@ -174,7 +171,6 @@ class ColdStorageAlertEmails extends Page implements HasForms
                 ->values()
                 ->all(),
             'is_enabled' => (bool) ($data['is_enabled'] ?? false),
-            'include_temperature' => (bool) ($data['include_temperature'] ?? true),
             'include_bills' => (bool) ($data['include_bills'] ?? true),
             'include_reservations' => (bool) ($data['include_reservations'] ?? true),
         ]);

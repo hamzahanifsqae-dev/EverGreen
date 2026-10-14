@@ -15,11 +15,9 @@ class ColdStorageActionAlertsMailable extends Mailable
 
     /**
      * @param  array{
-     *     temperature_count: int,
      *     bill_count: int,
      *     reservation_count: int,
      *     open_count: int,
-     *     temperature: list<array<string, mixed>>,
      *     bills: list<array<string, mixed>>,
      *     reservations: list<array<string, mixed>>,
      *     currency: string,

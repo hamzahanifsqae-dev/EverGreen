@@ -18,13 +18,11 @@ class ColdStorageChamber extends Model implements Auditable
 
     protected $fillable = [
         'merchant_id', 'business_id', 'branch_id', 'name', 'code', 'capacity_quantity',
-        'capacity_unit', 'min_temperature', 'max_temperature', 'temperature_unit', 'is_active', 'notes',
+        'capacity_unit', 'is_active', 'notes',
     ];
 
     protected $casts = [
         'capacity_quantity' => 'decimal:3',
-        'min_temperature' => 'decimal:2',
-        'max_temperature' => 'decimal:2',
         'is_active' => 'boolean',
     ];
 
@@ -70,10 +68,5 @@ class ColdStorageChamber extends Model implements Auditable
     public function movements(): HasMany
     {
         return $this->hasMany(ColdStorageMovement::class, 'chamber_id');
-    }
-
-    public function temperatureReadings(): HasMany
-    {
-        return $this->hasMany(ColdStorageTemperatureReading::class, 'chamber_id');
     }
 }

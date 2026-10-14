@@ -41,6 +41,12 @@ Route::get('/assets/preview/{id}', [AssetPreviewController::class, 'show'])
     ->middleware(['web', 'auth.staff_or_merchant'])
     ->name('assets.preview');
 
+Route::post('/toggle-hidden-modules', function (Request $request) {
+    session(['show_hidden_modules' => $request->boolean('show_hidden_modules')]);
+
+    return redirect()->back();
+})->middleware(['web', 'auth.staff_or_merchant'])->name('ui-modules.toggle-hidden');
+
 // POS product search endpoint
 Route::get('/pos/products', function (Request $request) {
     $user = auth('staff')->user() ?? auth('merchant')->user();

@@ -6,7 +6,6 @@ use App\Mail\ColdStorageActionAlertsMailable;
 use App\Models\ColdStorageAlertEmailSetting;
 use App\Models\ColdStorageBill;
 use App\Models\ColdStorageReservation;
-use App\Models\ColdStorageTemperatureReading;
 use App\Models\Merchant;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
@@ -23,7 +22,6 @@ class ActionAlertMailService
             [
                 'recipient_emails' => [],
                 'is_enabled' => false,
-                'include_temperature' => true,
                 'include_bills' => true,
                 'include_reservations' => true,
             ],
@@ -99,11 +97,9 @@ class ActionAlertMailService
 
     /**
      * @return array{
-     *     temperature_count: int,
      *     bill_count: int,
      *     reservation_count: int,
      *     open_count: int,
-     *     temperature: list<array<string, mixed>>,
      *     bills: list<array<string, mixed>>,
      *     reservations: list<array<string, mixed>>,
      *     currency: string,
@@ -118,25 +114,8 @@ class ActionAlertMailService
             'branch_ids' => [],
         ];
 
-        $temperature = [];
         $bills = [];
         $reservations = [];
-
-        if ($setting->include_temperature) {
-            $temperature = $this->alerts->temperatureQuery($filters)
-                ->where('is_out_of_range', true)
-                ->whereNull('acknowledged_at')
-                ->with('chamber')
-                ->orderByDesc('recorded_at')
-                ->limit(15)
-                ->get()
-                ->map(fn (ColdStorageTemperatureReading $reading): array => [
-                    'when' => $reading->recorded_at?->format(config('cold-storage.date_format').' H:i'),
-                    'chamber' => $reading->chamber?->name,
-                    'temperature' => $reading->temperature.' '.$reading->temperature_unit,
-                ])
-                ->all();
-        }
 
         if ($setting->include_bills) {
             $bills = $this->alerts->billQuery($filters)
@@ -174,16 +153,13 @@ class ActionAlertMailService
                 ->all();
         }
 
-        $temperatureCount = count($temperature);
         $billCount = count($bills);
         $reservationCount = count($reservations);
 
         return [
-            'temperature_count' => $temperatureCount,
             'bill_count' => $billCount,
             'reservation_count' => $reservationCount,
-            'open_count' => $temperatureCount + $billCount + $reservationCount,
-            'temperature' => $temperature,
+            'open_count' => $billCount + $reservationCount,
             'bills' => $bills,
             'reservations' => $reservations,
             'currency' => config('cold-storage.currency', 'PKR'),

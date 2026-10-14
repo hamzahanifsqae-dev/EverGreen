@@ -13,6 +13,7 @@ use App\Models\ColdStorageAdjustment;
 use App\Models\ColdStorageChamber;
 use App\Models\ColdStorageLocation;
 use App\Support\ColdStorageAccess;
+use App\Support\UiModules;
 use BackedEnum;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -42,6 +43,15 @@ class ColdStorageAdjustmentResource extends ColdStorageResource
     protected static ?int $navigationSort = 5;
 
     protected static ?string $recordTitleAttribute = 'adjustment_no';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        if (! UiModules::enabled('cold_storage_adjustments')) {
+            return false;
+        }
+
+        return parent::shouldRegisterNavigation();
+    }
 
     public static function form(Schema $schema): Schema
     {

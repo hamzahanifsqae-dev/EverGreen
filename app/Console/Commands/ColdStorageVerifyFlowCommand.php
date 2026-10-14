@@ -8,7 +8,6 @@ use App\Models\ColdStorageDispatch;
 use App\Models\ColdStorageMovement;
 use App\Models\ColdStorageReceipt;
 use App\Models\ColdStorageReservation;
-use App\Models\ColdStorageTemperatureReading;
 use App\Models\Merchant;
 use App\Models\Sale;
 use App\Services\ColdStorage\OccupancyService;
@@ -57,9 +56,6 @@ class ColdStorageVerifyFlowCommand extends Command
         $bills = ColdStorageBill::query()->where('merchant_id', $merchant->id)->where('status', 'posted')->count();
         $due = (float) ColdStorageBill::query()->where('merchant_id', $merchant->id)->where('status', 'posted')->sum('due_amount');
         $checks[] = ['Billing: posted storage bills', $bills > 0, $bills.' / due '.number_format($due, 2)];
-
-        $temps = ColdStorageTemperatureReading::query()->where('merchant_id', $merchant->id)->count();
-        $checks[] = ['Temperature readings recorded', $temps > 0, (string) $temps];
 
         $reservations = ColdStorageReservation::query()->where('merchant_id', $merchant->id)->whereIn('status', ['confirmed', 'fulfilled'])->count();
         $checks[] = ['Reservations confirmed/fulfilled', $reservations > 0, (string) $reservations];

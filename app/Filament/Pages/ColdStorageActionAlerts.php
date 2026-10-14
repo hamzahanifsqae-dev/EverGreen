@@ -5,25 +5,17 @@ namespace App\Filament\Pages;
 use App\Filament\Concerns\ColdStorageSubmoduleNavigation;
 use App\Models\ColdStorageBill;
 use App\Models\ColdStorageReservation;
-use App\Models\ColdStorageTemperatureReading;
 use App\Models\User;
 use App\Services\ColdStorage\ActionAlertService;
 use App\Services\ColdStorage\ReportService;
 use App\Support\ColdStorageAccess;
 use BackedEnum;
-use Filament\Actions\Action;
-use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Concerns\InteractsWithTable;
-use Filament\Tables\Contracts\HasTable;
-use Filament\Tables\Table;
 
-class ColdStorageActionAlerts extends Page implements HasTable
+class ColdStorageActionAlerts extends Page
 {
     use ColdStorageSubmoduleNavigation;
-    use InteractsWithTable;
 
     protected static function coldStorageUiModuleKey(): ?string
     {
@@ -47,43 +39,6 @@ class ColdStorageActionAlerts extends Page implements HasTable
         return ColdStorageAccess::can('view');
     }
 
-    public function table(Table $table): Table
-    {
-        return $table
-            ->query(fn () => app(ActionAlertService::class)
-                ->temperatureQuery($this->reportFilters())
-                ->where('is_out_of_range', true)
-                ->whereNull('acknowledged_at')
-                ->with(['chamber', 'branch']))
-            ->columns([
-                TextColumn::make('recorded_at')->label('When')->dateTime('d/m/Y H:i')->sortable(),
-                TextColumn::make('branch.name')->label('Branch'),
-                TextColumn::make('chamber.name')->label('Chamber'),
-                TextColumn::make('temperature')->label('Reading'),
-                TextColumn::make('min_temperature')->label('Min'),
-                TextColumn::make('max_temperature')->label('Max'),
-                TextColumn::make('source')->badge(),
-            ])
-            ->recordActions([
-                Action::make('acknowledge')
-                    ->label('Acknowledge')
-                    ->visible(fn (): bool => ColdStorageAccess::can('update'))
-                    ->action(function (ColdStorageTemperatureReading $record): void {
-                        app(ActionAlertService::class)->acknowledgeTemperature(
-                            $record,
-                            ColdStorageAccess::actorId(),
-                        );
-
-                        Notification::make()
-                            ->title('Temperature alert acknowledged')
-                            ->success()
-                            ->send();
-                    }),
-            ])
-            ->defaultSort('recorded_at', 'desc')
-            ->emptyStateHeading('No open temperature alerts');
-    }
-
     /**
      * @return array<string, mixed>
      */
@@ -94,7 +49,6 @@ class ColdStorageActionAlerts extends Page implements HasTable
 
         return [
             'open' => $alerts->openCount($filters),
-            'temperature' => $alerts->unacknowledgedTemperatureCount($filters),
             'bills' => $alerts->overdueBillCount($filters),
             'reservations' => $alerts->upcomingReservationCount($filters),
         ];

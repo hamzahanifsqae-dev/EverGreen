@@ -21,6 +21,7 @@ return [
         // Cold storage workflow
         'cold_storage' => true,
         'cold_storage_action_alerts' => true,
+        'cold_storage_adjustments' => false,
         'cold_storage_alert_emails' => false,
         'cold_storage_lot_ageing' => false,
         'cold_storage_quick_bill' => true,

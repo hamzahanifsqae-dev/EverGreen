@@ -70,16 +70,6 @@ class ColdStorageChamberResource extends ColdStorageResource
                         ->required()
                         ->default(ColdStorageCapacityUnit::Bag->value),
                     Toggle::make('is_active')->label('Active')->default(true),
-                    TextInput::make('min_temperature')
-                        ->label('Minimum temperature')
-                        ->numeric(),
-                    TextInput::make('max_temperature')
-                        ->label('Maximum temperature')
-                        ->numeric(),
-                    TextInput::make('temperature_unit')
-                        ->label('Temperature unit')
-                        ->default(config('cold-storage.defaults.temperature_unit'))
-                        ->maxLength(8),
                     Textarea::make('notes')
                         ->rows(3)
                         ->columnSpanFull(),

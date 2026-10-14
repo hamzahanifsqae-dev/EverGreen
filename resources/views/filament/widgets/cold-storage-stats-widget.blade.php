@@ -355,15 +355,10 @@
                         <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">Alerts & Master Data</p>
                         <span class="rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-600 dark:bg-rose-900/40 dark:text-rose-200">Monitor</span>
                     </div>
-                    @if (($stats['action_alerts_open'] ?? null) !== null)
-                        <p class="mt-4 text-3xl font-semibold text-slate-900 dark:text-slate-100">{{ number_format($stats['action_alerts_open']) }}</p>
-                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Open action alerts</p>
-                        @if ($insightUrls['alerts'] ?? null)
-                            <a href="{{ $insightUrls['alerts'] }}" class="mt-2 inline-block text-xs font-semibold text-rose-600 hover:underline dark:text-rose-300">Review alerts</a>
-                        @endif
-                    @else
-                        <p class="mt-4 text-3xl font-semibold text-slate-900 dark:text-slate-100">{{ number_format($stats['temp_exceptions'] ?? 0) }}</p>
-                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Temperature exceptions (unacknowledged)</p>
+                    <p class="mt-4 text-3xl font-semibold text-slate-900 dark:text-slate-100">{{ number_format($stats['action_alerts_open'] ?? 0) }}</p>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Open action alerts</p>
+                    @if ($insightUrls['alerts'] ?? null)
+                        <a href="{{ $insightUrls['alerts'] }}" class="mt-2 inline-block text-xs font-semibold text-rose-600 hover:underline dark:text-rose-300">Review alerts</a>
                     @endif
                     <div class="mt-4 space-y-2 text-sm text-slate-700 dark:text-slate-300">
                         @if ($stats['customers'] !== null)
@@ -505,22 +500,6 @@
                             <div class="flex items-center justify-between">
                                 <span>Net weight</span>
                                 <span class="font-semibold text-slate-900 dark:text-slate-100">{{ number_format($stock['weight'] ?? 0, 2) }}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="rounded-xl bg-gradient-to-br from-rose-50 to-white p-5 shadow-sm ring-1 ring-rose-100 stats-panel stats-panel-rose dark:bg-slate-900 dark:ring-rose-900/50">
-                        <div class="flex items-center justify-between">
-                            <p class="text-xs uppercase tracking-wide text-rose-600">Exceptions</p>
-                            <span class="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-600">Temp</span>
-                        </div>
-                        <div class="mt-3 space-y-2 text-sm text-slate-700 dark:text-slate-300">
-                            <div class="flex items-center justify-between">
-                                <span>Out of range</span>
-                                <span class="font-semibold text-slate-900 dark:text-slate-100">{{ number_format($stats['temp_exceptions'] ?? 0) }}</span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span>Amount due</span>
-                                <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $currency }} {{ number_format((float) ($stats['due_amount'] ?? 0), 2) }}</span>
                             </div>
                         </div>
                     </div>

@@ -15,44 +15,17 @@
 
                 <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom: 24px;">
                     <tr>
-                        <td style="padding: 12px; background: #fff7ed; border-radius: 8px; width: 33%;">
-                            <div style="font-size: 12px; color: #9a3412;">Temperature</div>
-                            <div style="font-size: 22px; font-weight: bold;">{{ number_format($digest['temperature_count'] ?? 0) }}</div>
-                        </td>
-                        <td style="width: 8px;"></td>
-                        <td style="padding: 12px; background: #fffbeb; border-radius: 8px; width: 33%;">
+                        <td style="padding: 12px; background: #fffbeb; border-radius: 8px; width: 50%;">
                             <div style="font-size: 12px; color: #92400e;">Bills due</div>
                             <div style="font-size: 22px; font-weight: bold;">{{ number_format($digest['bill_count'] ?? 0) }}</div>
                         </td>
                         <td style="width: 8px;"></td>
-                        <td style="padding: 12px; background: #f0f9ff; border-radius: 8px; width: 33%;">
+                        <td style="padding: 12px; background: #f0f9ff; border-radius: 8px; width: 50%;">
                             <div style="font-size: 12px; color: #075985;">Reservations</div>
                             <div style="font-size: 22px; font-weight: bold;">{{ number_format($digest['reservation_count'] ?? 0) }}</div>
                         </td>
                     </tr>
                 </table>
-
-                @if (! empty($digest['temperature']))
-                    <h2 style="font-size: 16px; margin: 0 0 8px;">Unacknowledged temperature exceptions</h2>
-                    <table width="100%" cellpadding="8" cellspacing="0" role="presentation" style="border-collapse: collapse; font-size: 13px; margin-bottom: 20px;">
-                        <thead>
-                            <tr style="background: #f1f5f9; text-align: left;">
-                                <th>When</th>
-                                <th>Chamber</th>
-                                <th>Reading</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($digest['temperature'] as $row)
-                                <tr style="border-top: 1px solid #e2e8f0;">
-                                    <td>{{ $row['when'] }}</td>
-                                    <td>{{ $row['chamber'] }}</td>
-                                    <td>{{ $row['temperature'] }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                @endif
 
                 @if (! empty($digest['bills']))
                     <h2 style="font-size: 16px; margin: 0 0 8px;">Outstanding storage bills</h2>

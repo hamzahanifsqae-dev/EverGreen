@@ -13,7 +13,7 @@
                 <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-200">Needs attention</span>
             </div>
 
-            <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+            <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
                 <div class="rounded-2xl bg-gradient-to-br from-rose-50 to-white p-5 shadow-sm ring-1 ring-rose-100 stats-panel stats-panel-rose dark:from-slate-950 dark:to-slate-950 dark:ring-rose-900/50">
                     <div class="flex items-center justify-between">
                         <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">Open alerts</p>
@@ -21,15 +21,6 @@
                     </div>
                     <p class="mt-4 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ number_format($summary['open']) }}</p>
                     <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Items that still need action</p>
-                </div>
-
-                <div class="rounded-2xl bg-gradient-to-br from-orange-50 to-white p-5 shadow-sm ring-1 ring-orange-100 stats-panel stats-panel-orange dark:from-slate-950 dark:to-slate-950 dark:ring-orange-900/50">
-                    <div class="flex items-center justify-between">
-                        <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">Temperature</p>
-                        <span class="rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-600 dark:bg-orange-900/40 dark:text-orange-200">Unacked</span>
-                    </div>
-                    <p class="mt-4 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ number_format($summary['temperature']) }}</p>
-                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Out-of-range readings</p>
                 </div>
 
                 <div class="rounded-2xl bg-gradient-to-br from-amber-50 to-white p-5 shadow-sm ring-1 ring-amber-100 stats-panel stats-panel-amber dark:from-slate-950 dark:to-slate-950 dark:ring-amber-900/50">
@@ -51,20 +42,6 @@
                 </div>
             </div>
         </div>
-
-        <section class="fi-section rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10">
-            <header class="fi-section-header flex items-center justify-between gap-x-3 px-6 py-4">
-                <h2 class="text-base font-semibold leading-6 text-gray-950 dark:text-white">
-                    Temperature exceptions needing review
-                </h2>
-                <span class="text-sm text-gray-500 dark:text-gray-400">
-                    Acknowledge after you have checked the chamber
-                </span>
-            </header>
-            <div class="fi-section-content border-t border-gray-200 px-6 py-4 dark:border-white/10">
-                {{ $this->table }}
-            </div>
-        </section>
 
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <section class="fi-section rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10">

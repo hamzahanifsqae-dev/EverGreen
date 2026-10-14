@@ -8,7 +8,6 @@ use App\Models\ColdStorageChamber;
 use App\Models\ColdStorageDispatch;
 use App\Models\ColdStorageMovement;
 use App\Models\ColdStorageReceipt;
-use App\Models\ColdStorageTemperatureReading;
 use App\Models\Customer;
 use App\Models\Product;
 use App\Models\User;
@@ -208,37 +207,6 @@ class ReportService
                 'total' => (float) $bill->total_amount,
                 'due' => (float) $bill->due_amount,
             ])->all();
-    }
-
-    /**
-     * @param  array<string, mixed>  $filters
-     * @return list<array<string, mixed>>
-     */
-    public function temperatureExceptions(array $filters): array
-    {
-        $query = ColdStorageTemperatureReading::query()
-            ->with(['chamber', 'recordedBy'])
-            ->where('merchant_id', $filters['merchant_id'])
-            ->where('is_out_of_range', true);
-
-        $this->applyRecordFilters($query, $filters);
-
-        if (filled($filters['from'] ?? null)) {
-            $query->whereDate('recorded_at', '>=', $filters['from']);
-        }
-
-        if (filled($filters['to'] ?? null)) {
-            $query->whereDate('recorded_at', '<=', $filters['to']);
-        }
-
-        return $query->orderByDesc('recorded_at')->get()->map(fn (ColdStorageTemperatureReading $reading): array => [
-            'chamber' => $reading->chamber?->name,
-            'when' => $reading->recorded_at?->format(config('cold-storage.date_format').' H:i'),
-            'temperature' => $reading->temperature.' '.$reading->temperature_unit,
-            'limits' => trim(($reading->min_temperature ?? '—').' to '.($reading->max_temperature ?? '—')),
-            'user' => $reading->recordedBy?->name ?? 'Merchant',
-            'source' => $reading->source,
-        ])->all();
     }
 
     /**

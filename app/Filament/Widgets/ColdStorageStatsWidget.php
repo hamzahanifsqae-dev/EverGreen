@@ -128,10 +128,7 @@ class ColdStorageStatsWidget extends Widget
 
         $reportFilters = $this->reportFilters($filters);
         $alerts = app(ActionAlertService::class);
-        $tempExceptions = $alerts->unacknowledgedTemperatureCount($reportFilters);
-        $actionAlertsOpen = UiModules::enabled('cold_storage_action_alerts')
-            ? $alerts->openCount($reportFilters)
-            : null;
+        $actionAlertsOpen = $alerts->openCount($reportFilters);
 
         $dueAmount = (float) (clone $billQuery)->sum('due_amount');
         $billedAmount = (float) (clone $billQuery)->sum('total_amount');
@@ -174,7 +171,6 @@ class ColdStorageStatsWidget extends Widget
                 'due_amount' => $dueAmount,
                 'paid_amount' => $paidAmount,
                 'billed_amount' => $billedAmount,
-                'temp_exceptions' => $tempExceptions,
                 'action_alerts_open' => $actionAlertsOpen,
                 'customers' => UiModules::enabled('customers')
                     ? Customer::query()->where('merchant_id', $merchantId)->count()
@@ -225,8 +221,7 @@ class ColdStorageStatsWidget extends Widget
             'due_amount' => 0.0,
             'paid_amount' => 0.0,
             'billed_amount' => 0.0,
-            'temp_exceptions' => 0,
-            'action_alerts_open' => null,
+            'action_alerts_open' => 0,
             'customers' => UiModules::enabled('customers') ? 0 : null,
             'products' => UiModules::enabled('products') ? 0 : null,
         ];

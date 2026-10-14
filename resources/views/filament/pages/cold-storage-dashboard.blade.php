@@ -9,7 +9,6 @@
             'Return' => $reports->dispatches($filters),
             'Damage and adjustments' => $reports->adjustments($filters),
             'Storage charges' => $reports->bills($filters),
-            'Temperature exceptions' => $reports->temperatureExceptions($filters),
         ];
 
         $headingLabels = [
@@ -27,9 +26,6 @@
             'occupied_quantity' => 'Occupied',
             'available_quantity' => 'Available',
             'occupancy_percent' => 'Occupancy %',
-            'is_out_of_range' => 'Out of range',
-            'recorded_at' => 'Recorded at',
-            'temperature' => 'Temperature',
             'total_amount' => 'Total',
             'due_amount' => 'Due',
             'period_start' => 'From',
