@@ -4,10 +4,18 @@
         'dispatch' => 'Return',
         default => 'Storage invoice',
     };
+    $documentTitleUr = match ($type) {
+        'receipt' => 'وصولی رسید',
+        'dispatch' => 'واپسی',
+        default => 'انوائس',
+    };
     $documentNumber = $record->receipt_no ?? $record->dispatch_no ?? $record->bill_no;
+    $legacyReference = $record->legacy_reference ?? null;
     $merchant = $record->merchant;
     $logoPath = $merchant?->logo?->photo_url;
     $money = fn ($amount): string => $currency.' '.number_format((float) $amount, 2);
+    /** English/Urdu bilingual label pairs used throughout this document. */
+    $ur = fn (string $urdu) => '<span class="ur" dir="rtl" lang="ur">'.$urdu.'</span>';
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -15,7 +23,18 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $documentTitle }} {{ $documentNumber }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        .ur {
+            font-family: "Noto Nastaliq Urdu", serif;
+            unicode-bidi: isolate;
+            direction: rtl;
+            margin-left: 6px;
+            color: inherit;
+        }
+
+        .label .ur, .k .ur { font-size: 12px; opacity: 0.85; }
         :root {
             --ink: #0f172a;
             --muted: #64748b;
@@ -369,14 +388,17 @@
                 </div>
 
                 <div class="doc-title">
-                    <h1>{{ $type === 'bill' ? 'Invoice' : $documentTitle }}</h1>
+                    <h1>{{ $type === 'bill' ? 'Invoice' : $documentTitle }} {!! $ur($type === 'bill' ? 'انوائس' : $documentTitleUr) !!}</h1>
                     <div class="number"># {{ $documentNumber }}</div>
+                    @if ($legacyReference)
+                        <div class="number">Legacy ref. {!! $ur('پرانا حوالہ') !!}: {{ $legacyReference }}</div>
+                    @endif
                 </div>
             </header>
 
             <div class="party-grid">
                 <div class="card">
-                    <span class="label">{{ $type === 'dispatch' ? 'Released to' : 'Bill to' }}</span>
+                    <span class="label">{{ $type === 'dispatch' ? 'Released to' : 'Bill to' }} {!! $ur($type === 'dispatch' ? 'وصول کنندہ' : 'بل بھیجا گیا') !!}</span>
                     <strong>{{ $record->customer?->name ?: '—' }}</strong>
                     @if ($record->customer?->email)
                         <p>{{ $record->customer->email }}</p>
@@ -385,19 +407,19 @@
                         <p>{{ $record->customer->phone }}</p>
                     @endif
                     @if ($type === 'dispatch' && $record->recipient_name)
-                        <p>Recipient: {{ $record->recipient_name }}</p>
+                        <p>Recipient {!! $ur('وصول کنندہ کا نام') !!}: {{ $record->recipient_name }}</p>
                     @endif
                 </div>
 
                 <div class="card">
-                    <span class="label">Document details</span>
+                    <span class="label">Document details {!! $ur('دستاویز کی تفصیلات') !!}</span>
                     <div class="meta-list">
                         @if ($type === 'receipt')
-                            <div><span class="k">Received on</span><span class="v">{{ $record->received_on?->format('d/m/Y') ?: '—' }}</span></div>
+                            <div><span class="k">Received on {!! $ur('موصولہ تاریخ') !!}</span><span class="v">{{ $record->received_on?->format('d/m/Y') ?: '—' }}</span></div>
                             <div><span class="k">Vehicle</span><span class="v">{{ $record->vehicle_number ?: '—' }}</span></div>
                             <div><span class="k">Branch</span><span class="v">{{ $record->branch?->name ?: '—' }}</span></div>
                         @elseif ($type === 'dispatch')
-                            <div><span class="k">Returned on</span><span class="v">{{ $record->dispatched_on?->format('d/m/Y') ?: '—' }}</span></div>
+                            <div><span class="k">Returned on {!! $ur('واپسی کی تاریخ') !!}</span><span class="v">{{ $record->dispatched_on?->format('d/m/Y') ?: '—' }}</span></div>
                             <div><span class="k">Vehicle</span><span class="v">{{ $record->vehicle_number ?: '—' }}</span></div>
                             <div><span class="k">Branch</span><span class="v">{{ $record->branch?->name ?: '—' }}</span></div>
                         @else
@@ -411,14 +433,15 @@
             </div>
 
             @if ($type === 'receipt')
-                <div class="section-title">Received lots</div>
+                <div class="section-title">Received lots {!! $ur('موصولہ لاٹس') !!}</div>
                 <table>
                     <thead>
                         <tr>
-                            <th>Product</th>
-                            <th>Lot</th>
-                            <th class="num">Packages</th>
-                            <th class="num">Weight</th>
+                            <th>Product / Variety {!! $ur('قسم') !!}</th>
+                            <th>Lot {!! $ur('لاٹ') !!}</th>
+                            <th>Marks {!! $ur('نشان') !!}</th>
+                            <th class="num">Bags {!! $ur('بوری') !!}</th>
+                            <th class="num">Weight {!! $ur('وزن') !!}</th>
                             <th>Location</th>
                         </tr>
                     </thead>
@@ -427,6 +450,7 @@
                             <tr>
                                 <td>{{ $item->product?->name ?: '—' }}</td>
                                 <td>{{ $item->lot_number }}</td>
+                                <td>{{ $item->marks ?: '—' }}</td>
                                 <td class="num">{{ number_format((float) $item->package_count, 3) }}</td>
                                 <td class="num">{{ number_format((float) $item->net_weight, 3) }} {{ $item->weight_unit }}</td>
                                 <td>
@@ -438,11 +462,11 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="5" class="muted">No receipt lines.</td></tr>
+                            <tr><td colspan="6" class="muted">No receipt lines.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
-                <div class="notes">These goods remain the property of the customer. This receipt is not a purchase.</div>
+                <div class="notes">These goods remain the property of the customer. This receipt is not a purchase. {!! $ur('یہ مال کسٹمر کی ملکیت ہے اور یہ خریداری نہیں ہے۔') !!}</div>
             @elseif ($type === 'dispatch')
                 <div class="section-title">Released lots</div>
                 <table>
@@ -515,9 +539,9 @@
                 <div class="totals">
                     <div class="row"><span>Storage</span><span>{{ $money($record->storage_total) }}</span></div>
                     <div class="row"><span>Services</span><span>{{ $money($record->service_total) }}</span></div>
-                    <div class="row grand"><span>Total</span><span>{{ $money($record->total_amount) }}</span></div>
-                    <div class="row"><span>Paid</span><span>{{ $money($record->paid_amount) }}</span></div>
-                    <div class="row due"><span>Amount due</span><span>{{ $money($record->due_amount) }}</span></div>
+                    <div class="row grand"><span>Total {!! $ur('کل رقم') !!}</span><span>{{ $money($record->total_amount) }}</span></div>
+                    <div class="row"><span>Paid {!! $ur('ادا شدہ') !!}</span><span>{{ $money($record->paid_amount) }}</span></div>
+                    <div class="row due"><span>Amount due {!! $ur('باقی رقم') !!}</span><span>{{ $money($record->due_amount) }}</span></div>
                 </div>
 
                 @if ($record->notes)

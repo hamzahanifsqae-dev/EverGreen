@@ -18,7 +18,7 @@ class ColdStorageBill extends Model implements Auditable
     use SoftDeletes;
 
     protected $fillable = [
-        'merchant_id', 'business_id', 'branch_id', 'customer_id', 'bill_no', 'period_start', 'period_end',
+        'merchant_id', 'business_id', 'branch_id', 'customer_id', 'dispatch_id', 'bill_no', 'period_start', 'period_end',
         'charge_basis', 'charge_period',
         'status', 'storage_total', 'service_total', 'total_amount', 'paid_amount', 'due_amount', 'notes',
         'posted_at', 'posted_by', 'cancelled_at', 'cancelled_by', 'cancellation_reason', 'created_by',
@@ -56,6 +56,11 @@ class ColdStorageBill extends Model implements Auditable
         return $this->belongsTo(Customer::class);
     }
 
+    public function dispatch(): BelongsTo
+    {
+        return $this->belongsTo(ColdStorageDispatch::class, 'dispatch_id');
+    }
+
     public function lines(): HasMany
     {
         return $this->hasMany(ColdStorageBillLine::class, 'bill_id');
@@ -69,5 +74,10 @@ class ColdStorageBill extends Model implements Auditable
     public function payments(): MorphMany
     {
         return $this->morphMany(Payment::class, 'paymentable');
+    }
+
+    public function allocations(): HasMany
+    {
+        return $this->hasMany(ColdStorageBillAllocation::class, 'bill_id');
     }
 }

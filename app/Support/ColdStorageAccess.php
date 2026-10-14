@@ -80,6 +80,24 @@ class ColdStorageAccess
             ->whereHas('branch.users', fn (Builder $branchQuery) => $branchQuery->where('users.id', $user->id));
     }
 
+    /**
+     * Branch ids this actor may see cold-storage data for, or null when unrestricted (merchant owner).
+     *
+     * @return list<string>|null
+     */
+    public static function authorizedBranchIds(Merchant|User|null $user = null): ?array
+    {
+        $user ??= self::user();
+
+        if ($user instanceof User) {
+            return $user->branches()->pluck('branches.id')->all();
+        }
+
+        // A merchant owner, or a direct/system call with no authenticated actor
+        // (console, queued jobs, tests), is unrestricted.
+        return null;
+    }
+
     public static function assertActorCanUseBranch(?string $actorId, string $branchId, string $businessId): void
     {
         if ($actorId === null) {

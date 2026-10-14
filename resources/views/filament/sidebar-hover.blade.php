@@ -1,228 +1,245 @@
 <style>
-    .fi-sidebar {
-        width: 17rem !important;
-        min-width: 17rem !important;
-        transition: width 0.25s ease !important;
-        position: relative !important;
+    /*
+     * This hover-to-expand / click-to-pin sidebar is a desktop-only affordance.
+     * Below 1024px (Filament's own `lg` breakpoint) the sidebar must stay in
+     * Filament's native fixed, off-canvas, overlay mode — forcing `position:
+     * relative` or a fixed width there (even visually off-screen) keeps the
+     * sidebar in normal flow and steals that width from the page content.
+     */
+    @media (min-width: 1024px) {
+        .fi-sidebar {
+            width: 17rem !important;
+            min-width: 17rem !important;
+            transition: width 0.25s ease !important;
+            position: relative !important;
+        }
+
+        .fi-sidebar:not(.sidebar-pinned) {
+            width: 5rem !important;
+            min-width: 5rem !important;
+        }
+
+        .fi-sidebar.sidebar-pinned {
+            width: 17rem !important;
+            min-width: 17rem !important;
+        }
+
+        .fi-sidebar:not(.sidebar-pinned):hover {
+            width: 17rem !important;
+            min-width: 17rem !important;
+        }
+
+        /* Unpinned: icons only — hide all labels/badges (Filament v4 class names) */
+        .fi-sidebar:not(.sidebar-pinned):not(:hover) .fi-sidebar-item-label,
+        .fi-sidebar:not(.sidebar-pinned):not(:hover) .fi-sidebar-group-label,
+        .fi-sidebar:not(.sidebar-pinned):not(:hover) .fi-sidebar-item-badge-ctn,
+        .fi-sidebar:not(.sidebar-pinned):not(:hover) .fi-brand-name,
+        .fi-sidebar:not(.sidebar-pinned):not(:hover) .fi-sidebar-header .truncate {
+            display: none !important;
+            visibility: hidden !important;
+            width: 0 !important;
+            max-width: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        .fi-sidebar:not(.sidebar-pinned):not(:hover) .fi-sidebar-group-collapse-btn {
+            display: none !important;
+        }
+
+        .fi-sidebar:not(.sidebar-pinned):not(:hover) .fi-sidebar-item-grouped-border {
+            display: none !important;
+        }
+
+        .fi-sidebar:not(.sidebar-pinned):not(:hover) .fi-sidebar-item-btn,
+        .fi-sidebar:not(.sidebar-pinned):not(:hover) .fi-sidebar-group-btn {
+            justify-content: center !important;
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+        }
+
+        .fi-sidebar:hover .fi-sidebar-item-label,
+        .fi-sidebar:hover .fi-sidebar-group-label,
+        .fi-sidebar:hover .fi-sidebar-item-badge-ctn,
+        .fi-sidebar:hover .fi-brand-name,
+        .fi-sidebar:hover .fi-sidebar-header .truncate,
+        .fi-sidebar.sidebar-pinned .fi-sidebar-item-label,
+        .fi-sidebar.sidebar-pinned .fi-sidebar-group-label,
+        .fi-sidebar.sidebar-pinned .fi-sidebar-item-badge-ctn,
+        .fi-sidebar.sidebar-pinned .fi-brand-name,
+        .fi-sidebar.sidebar-pinned .fi-sidebar-header .truncate {
+            display: revert !important;
+            visibility: visible !important;
+            width: auto !important;
+            max-width: none !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
+
+        .fi-sidebar:hover .fi-sidebar-group-collapse-btn,
+        .fi-sidebar.sidebar-pinned .fi-sidebar-group-collapse-btn {
+            display: revert !important;
+        }
+
+        .fi-sidebar:hover .fi-sidebar-item-grouped-border,
+        .fi-sidebar.sidebar-pinned .fi-sidebar-item-grouped-border {
+            display: revert !important;
+        }
+
+        .fi-sidebar .fi-sidebar-item-btn,
+        .fi-sidebar .fi-sidebar-group-btn {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+        }
+
+        .fi-sidebar:hover .fi-sidebar-item-btn,
+        .fi-sidebar:hover .fi-sidebar-group-btn,
+        .fi-sidebar.sidebar-pinned .fi-sidebar-item-btn,
+        .fi-sidebar.sidebar-pinned .fi-sidebar-group-btn {
+            justify-content: flex-start !important;
+            padding-left: 1rem !important;
+            padding-right: 0.75rem !important;
+        }
+
+        .fi-sidebar .fi-sidebar-item-icon,
+        .fi-sidebar svg:not(.sidebar-pin-btn svg) {
+            flex-shrink: 0 !important;
+            min-width: 1.25rem !important;
+        }
+
+        /* Remove top gap so Dashboard sits flush against the pin bar */
+        .fi-sidebar-nav {
+            padding-top: 0 !important;
+        }
+        .fi-sidebar-nav > nav,
+        .fi-sidebar-nav > div:first-child {
+            padding-top: 0 !important;
+            margin-top: 0 !important;
+        }
+
+        /* ── Pin bar (light default, dark override) ── */
+        .sidebar-pin-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 36px;
+            padding: 0 10px;
+            background: #f9fafb;
+            border-bottom: 1px solid #eaecf0;
+            flex-shrink: 0;
+            overflow: hidden;
+            transition: justify-content 0.2s, background 0.2s, border-color 0.2s;
+        }
+
+        html.dark .sidebar-pin-bar {
+            background: #111827;
+            border-bottom: 1px solid #1f2937;
+        }
+
+        .fi-sidebar:hover .sidebar-pin-bar,
+        .fi-sidebar.sidebar-pinned .sidebar-pin-bar {
+            justify-content: space-between;
+        }
+
+        /* Label – visible only when expanded */
+        .sidebar-pin-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #9ca3af;
+            white-space: nowrap;
+            overflow: hidden;
+            opacity: 0;
+            max-width: 0;
+            transition: opacity 0.2s ease, max-width 0.25s ease, color 0.2s;
+            user-select: none;
+        }
+
+        html.dark .sidebar-pin-label {
+            color: #64748b;
+        }
+
+        .fi-sidebar:hover .sidebar-pin-label,
+        .fi-sidebar.sidebar-pinned .sidebar-pin-label {
+            opacity: 1;
+            max-width: 140px;
+        }
+
+        /* ── Pin button ── */
+        .sidebar-pin-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            background: transparent;
+            border: 1.5px solid #e5e7eb;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+            color: #9ca3af;
+            flex-shrink: 0;
+            outline: none;
+        }
+
+        .sidebar-pin-btn:hover {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+            color: #374151;
+            box-shadow: none;
+        }
+
+        html.dark .sidebar-pin-btn {
+            border-color: #475569;
+            color: #94a3b8;
+        }
+
+        html.dark .sidebar-pin-btn:hover {
+            background: #1f2937;
+            border-color: #64748b;
+            color: #e2e8f0;
+        }
+
+        .sidebar-pin-btn:focus-visible {
+            box-shadow: 0 0 0 2px #6366f130;
+            border-color: #6366f1;
+        }
+
+        .sidebar-pin-btn.pinned {
+            background: rgba(99, 102, 241, 0.08);
+            border-color: rgba(99, 102, 241, 0.45);
+            color: #6366f1;
+        }
+
+        .sidebar-pin-btn.pinned:hover {
+            background: rgba(99, 102, 241, 0.14);
+            border-color: #6366f1;
+            box-shadow: none;
+        }
+
+        html.dark .sidebar-pin-btn.pinned {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: rgba(129, 140, 248, 0.45);
+            color: #a5b4fc;
+        }
+
+        html.dark .sidebar-pin-btn.pinned:hover {
+            background: rgba(99, 102, 241, 0.22);
+            border-color: #818cf8;
+        }
     }
 
-    .fi-sidebar:not(.sidebar-pinned) {
-        width: 5rem !important;
-        min-width: 5rem !important;
-    }
-
-    .fi-sidebar.sidebar-pinned {
-        width: 17rem !important;
-        min-width: 17rem !important;
-    }
-
-    .fi-sidebar:not(.sidebar-pinned):hover {
-        width: 17rem !important;
-        min-width: 17rem !important;
-    }
-
-    /* Unpinned: icons only — hide all labels/badges (Filament v4 class names) */
-    .fi-sidebar:not(.sidebar-pinned):not(:hover) .fi-sidebar-item-label,
-    .fi-sidebar:not(.sidebar-pinned):not(:hover) .fi-sidebar-group-label,
-    .fi-sidebar:not(.sidebar-pinned):not(:hover) .fi-sidebar-item-badge-ctn,
-    .fi-sidebar:not(.sidebar-pinned):not(:hover) .fi-brand-name,
-    .fi-sidebar:not(.sidebar-pinned):not(:hover) .fi-sidebar-header .truncate {
-        display: none !important;
-        visibility: hidden !important;
-        width: 0 !important;
-        max-width: 0 !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        overflow: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-    }
-
-    .fi-sidebar:not(.sidebar-pinned):not(:hover) .fi-sidebar-group-collapse-btn {
-        display: none !important;
-    }
-
-    .fi-sidebar:not(.sidebar-pinned):not(:hover) .fi-sidebar-item-grouped-border {
-        display: none !important;
-    }
-
-    .fi-sidebar:not(.sidebar-pinned):not(:hover) .fi-sidebar-item-btn,
-    .fi-sidebar:not(.sidebar-pinned):not(:hover) .fi-sidebar-group-btn {
-        justify-content: center !important;
-        padding-left: 0.75rem !important;
-        padding-right: 0.75rem !important;
-    }
-
-    .fi-sidebar:hover .fi-sidebar-item-label,
-    .fi-sidebar:hover .fi-sidebar-group-label,
-    .fi-sidebar:hover .fi-sidebar-item-badge-ctn,
-    .fi-sidebar:hover .fi-brand-name,
-    .fi-sidebar:hover .fi-sidebar-header .truncate,
-    .fi-sidebar.sidebar-pinned .fi-sidebar-item-label,
-    .fi-sidebar.sidebar-pinned .fi-sidebar-group-label,
-    .fi-sidebar.sidebar-pinned .fi-sidebar-item-badge-ctn,
-    .fi-sidebar.sidebar-pinned .fi-brand-name,
-    .fi-sidebar.sidebar-pinned .fi-sidebar-header .truncate {
-        display: revert !important;
-        visibility: visible !important;
-        width: auto !important;
-        max-width: none !important;
-        opacity: 1 !important;
-        pointer-events: auto !important;
-    }
-
-    .fi-sidebar:hover .fi-sidebar-group-collapse-btn,
-    .fi-sidebar.sidebar-pinned .fi-sidebar-group-collapse-btn {
-        display: revert !important;
-    }
-
-    .fi-sidebar:hover .fi-sidebar-item-grouped-border,
-    .fi-sidebar.sidebar-pinned .fi-sidebar-item-grouped-border {
-        display: revert !important;
-    }
-
-    .fi-sidebar .fi-sidebar-item-btn,
-    .fi-sidebar .fi-sidebar-group-btn {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: flex-start !important;
-    }
-
-    .fi-sidebar:hover .fi-sidebar-item-btn,
-    .fi-sidebar:hover .fi-sidebar-group-btn,
-    .fi-sidebar.sidebar-pinned .fi-sidebar-item-btn,
-    .fi-sidebar.sidebar-pinned .fi-sidebar-group-btn {
-        justify-content: flex-start !important;
-        padding-left: 1rem !important;
-        padding-right: 0.75rem !important;
-    }
-
-    .fi-sidebar .fi-sidebar-item-icon,
-    .fi-sidebar svg:not(.sidebar-pin-btn svg) {
-        flex-shrink: 0 !important;
-        min-width: 1.25rem !important;
-    }
-
-    /* Remove top gap so Dashboard sits flush against the pin bar */
-    .fi-sidebar-nav {
-        padding-top: 0 !important;
-    }
-    .fi-sidebar-nav > nav,
-    .fi-sidebar-nav > div:first-child {
-        padding-top: 0 !important;
-        margin-top: 0 !important;
-    }
-
-    /* ── Pin bar (light default, dark override) ── */
-    .sidebar-pin-bar {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 36px;
-        padding: 0 10px;
-        background: #f9fafb;
-        border-bottom: 1px solid #eaecf0;
-        flex-shrink: 0;
-        overflow: hidden;
-        transition: justify-content 0.2s, background 0.2s, border-color 0.2s;
-    }
-
-    html.dark .sidebar-pin-bar {
-        background: #111827;
-        border-bottom: 1px solid #1f2937;
-    }
-
-    .fi-sidebar:hover .sidebar-pin-bar,
-    .fi-sidebar.sidebar-pinned .sidebar-pin-bar {
-        justify-content: space-between;
-    }
-
-    /* Label – visible only when expanded */
-    .sidebar-pin-label {
-        font-size: 10px;
-        font-weight: 600;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        color: #9ca3af;
-        white-space: nowrap;
-        overflow: hidden;
-        opacity: 0;
-        max-width: 0;
-        transition: opacity 0.2s ease, max-width 0.25s ease, color 0.2s;
-        user-select: none;
-    }
-
-    html.dark .sidebar-pin-label {
-        color: #64748b;
-    }
-
-    .fi-sidebar:hover .sidebar-pin-label,
-    .fi-sidebar.sidebar-pinned .sidebar-pin-label {
-        opacity: 1;
-        max-width: 140px;
-    }
-
-    /* ── Pin button ── */
-    .sidebar-pin-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 26px;
-        height: 26px;
-        border-radius: 6px;
-        background: transparent;
-        border: 1.5px solid #e5e7eb;
-        cursor: pointer;
-        transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
-        color: #9ca3af;
-        flex-shrink: 0;
-        outline: none;
-    }
-
-    .sidebar-pin-btn:hover {
-        background: #f3f4f6;
-        border-color: #d1d5db;
-        color: #374151;
-        box-shadow: none;
-    }
-
-    html.dark .sidebar-pin-btn {
-        border-color: #475569;
-        color: #94a3b8;
-    }
-
-    html.dark .sidebar-pin-btn:hover {
-        background: #1f2937;
-        border-color: #64748b;
-        color: #e2e8f0;
-    }
-
-    .sidebar-pin-btn:focus-visible {
-        box-shadow: 0 0 0 2px #6366f130;
-        border-color: #6366f1;
-    }
-
-    .sidebar-pin-btn.pinned {
-        background: rgba(99, 102, 241, 0.08);
-        border-color: rgba(99, 102, 241, 0.45);
-        color: #6366f1;
-    }
-
-    .sidebar-pin-btn.pinned:hover {
-        background: rgba(99, 102, 241, 0.14);
-        border-color: #6366f1;
-        box-shadow: none;
-    }
-
-    html.dark .sidebar-pin-btn.pinned {
-        background: rgba(99, 102, 241, 0.15);
-        border-color: rgba(129, 140, 248, 0.45);
-        color: #a5b4fc;
-    }
-
-    html.dark .sidebar-pin-btn.pinned:hover {
-        background: rgba(99, 102, 241, 0.22);
-        border-color: #818cf8;
+    /* Below lg, the pin bar has nothing useful to do — Filament's own
+       hamburger-triggered overlay sidebar handles open/close instead. */
+    @media (max-width: 1023.98px) {
+        .sidebar-pin-bar {
+            display: none !important;
+        }
     }
 </style>
 
@@ -295,15 +312,20 @@
             updateIcon(pinned);
         });
 
-        // Hover expand / collapse (only when not pinned) — CSS handles labels; width only here
+        // Hover expand / collapse (only when not pinned, and only on desktop —
+        // below lg, Filament's own fixed/off-canvas sidebar must stay in charge
+        // of width, or an inline style here would pin it to a fixed width even
+        // while visually off-screen, stealing layout space from the page).
+        const isDesktop = () => window.matchMedia('(min-width: 1024px)').matches;
+
         sidebar.addEventListener('mouseenter', function () {
-            if (sidebar.classList.contains('sidebar-pinned')) return;
+            if (!isDesktop() || sidebar.classList.contains('sidebar-pinned')) return;
             sidebar.style.width = '17rem';
             sidebar.style.minWidth = '17rem';
         });
 
         sidebar.addEventListener('mouseleave', function () {
-            if (sidebar.classList.contains('sidebar-pinned')) return;
+            if (!isDesktop() || sidebar.classList.contains('sidebar-pinned')) return;
             sidebar.style.width = '5rem';
             sidebar.style.minWidth = '5rem';
         });

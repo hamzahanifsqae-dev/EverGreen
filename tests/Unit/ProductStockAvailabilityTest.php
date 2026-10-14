@@ -4,7 +4,7 @@ namespace Tests\Unit;
 
 use App\Models\Product;
 use App\Support\ProductStockAvailability;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 class ProductStockAvailabilityTest extends TestCase
 {

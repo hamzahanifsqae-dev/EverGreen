@@ -6,11 +6,14 @@ use App\Filament\Auth\Login;
 use App\Models\Merchant;
 use App\Models\User;
 use Filament\Facades\Filament;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
 
 class PanelLoginPersistenceTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_merchant_login_persists_authentication(): void
     {
         $merchant = Merchant::query()

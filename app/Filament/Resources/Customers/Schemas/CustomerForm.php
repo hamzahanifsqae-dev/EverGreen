@@ -9,6 +9,7 @@ use App\Models\Merchant;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
@@ -136,6 +137,49 @@ class CustomerForm
                 ->label('Reference Customer')
                 ->maxLength(255)
                 ->nullable(),
+
+            TextInput::make('account_code')
+                ->label('Account code')
+                ->helperText('Legacy book/account reference used to find this customer in older registers.')
+                ->maxLength(255)
+                ->unique(
+                    Customer::class,
+                    'account_code',
+                    ignoreRecord: true,
+                    modifyRuleUsing: function (Unique $rule): Unique {
+                        $user = Filament::auth()->user();
+                        $merchantId = match (true) {
+                            $user instanceof Merchant => $user->id,
+                            $user instanceof User => $user->merchant_id,
+                            default => null,
+                        };
+
+                        return $rule->where('merchant_id', $merchantId)->withoutTrashed();
+                    }
+                )
+                ->nullable(),
+
+            Select::make('storage_billing_preference')
+                ->label('Storage billing preference')
+                ->helperText('Informational only — both billing actions stay available for every customer regardless of this setting. It just tells the clerk which one this customer normally expects.')
+                ->placeholder('No preference set')
+                ->options(Customer::storageBillingPreferenceOptions())
+                ->native(false),
+
+            Repeater::make('legacyReferences')
+                ->label('Legacy register references')
+                ->relationship()
+                ->defaultItems(0)
+                ->addActionLabel('Add legacy reference')
+                ->helperText('One customer can have more than one book/page reference across seasons.')
+                ->columnSpanFull()
+                ->columns(3)
+                ->schema([
+                    TextInput::make('season')->label('Season')->maxLength(255),
+                    TextInput::make('book')->label('Book')->maxLength(255),
+                    TextInput::make('page')->label('Page')->maxLength(255),
+                    TextInput::make('note')->label('Note')->columnSpanFull(),
+                ]),
 
             Select::make('branch_ids')
                 ->label('Branches')

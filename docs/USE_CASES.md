@@ -42,7 +42,7 @@ Plain-language situations the system is built for.
 **Goal:** Bill a customer for days goods stayed in store.
 
 **Steps:** Ensure rate card exists → create bill (or Bill from stock) for a date period → preview → post → take payment.  
-**Result:** Due amount shows on dashboard; payments reduce balance. Overlapping posted periods for the same lot are rejected.
+**Result:** Due amount shows on dashboard; payments reduce balance. A second bill for the same lot and an overlapping period is allowed (for example, after a partial withdrawal extends the period) but only charges the entitlement not already covered by an earlier posted bill — the same bags and days are never billed twice.
 
 ## UC-07 — Watch chamber temperature
 **Actor:** Operator / supervisor  

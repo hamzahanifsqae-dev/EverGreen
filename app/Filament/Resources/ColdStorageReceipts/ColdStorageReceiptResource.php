@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ColdStorageReceipts;
 
 use App\Enums\ColdStorageWeightUnit;
+use App\Filament\ColdStorage\ColdStorageActions;
 use App\Filament\Resources\ColdStorage\ColdStorageResource;
 use App\Filament\Resources\ColdStorageReceipts\Pages\CreateColdStorageReceipt;
 use App\Filament\Resources\ColdStorageReceipts\Pages\EditColdStorageReceipt;
@@ -80,6 +81,9 @@ class ColdStorageReceiptResource extends ColdStorageResource
                         ->required(),
                     TextInput::make('vehicle_number')
                         ->label('Vehicle number'),
+                    TextInput::make('legacy_reference')
+                        ->label('Legacy register reference')
+                        ->helperText('Serial/page reference from the paper register, if any.'),
                     Textarea::make('notes')
                         ->rows(3)
                         ->columnSpanFull(),
@@ -127,6 +131,9 @@ class ColdStorageReceiptResource extends ColdStorageResource
                             TextInput::make('lot_number')
                                 ->label('Lot number')
                                 ->required(),
+                            TextInput::make('marks')
+                                ->label('Identifying marks')
+                                ->helperText('Bag marking, stack number, or farmer mark used to identify this lot.'),
                             TextInput::make('package_count')
                                 ->label('Bags / packages')
                                 ->numeric()
@@ -213,6 +220,7 @@ class ColdStorageReceiptResource extends ColdStorageResource
                     TextEntry::make('customer.name')->label('Customer'),
                     TextEntry::make('branch.name')->label('Branch'),
                     TextEntry::make('vehicle_number')->label('Vehicle'),
+                    TextEntry::make('legacy_reference')->label('Legacy reference')->placeholder('—'),
                     TextEntry::make('notes')->columnSpanFull(),
                 ]),
             Section::make('Goods')
@@ -224,6 +232,7 @@ class ColdStorageReceiptResource extends ColdStorageResource
                         ->schema([
                             TextEntry::make('product.name')->label('Product'),
                             TextEntry::make('lot_number')->label('Lot'),
+                            TextEntry::make('marks')->label('Marks')->placeholder('—'),
                             TextEntry::make('package_count')->label('Packages'),
                             TextEntry::make('net_weight')->label('Net weight'),
                             TextEntry::make('weight_unit')->label('Unit'),
@@ -251,6 +260,7 @@ class ColdStorageReceiptResource extends ColdStorageResource
             ViewAction::make(),
             EditAction::make()
                 ->visible(fn (ColdStorageReceipt $record): bool => static::canEdit($record)),
+            ColdStorageActions::print('receipt'),
         ])->defaultSort('received_on', 'desc');
     }
 

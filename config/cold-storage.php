@@ -23,7 +23,9 @@ return [
     | - Bag and pallet capacity and rates count packages. Kilogram and tonne capacity
     |   and rates count net weight. Packages are not converted into weight.
     | - Transfers stay inside a single branch.
-    | - The same lot can be billed again for the same or overlapping dates (e.g. after a partial return).
+    | - The same lot can be billed again for the same or overlapping dates (e.g. after a partial
+    |   return). Each day's entitlement is tracked per receipt item, so a day already covered by
+    |   another posted bill is never charged again, even across overlapping periods.
     | - Minimum charge applies per billed segment when the calculated amount is above zero
     |   and below the minimum. Service charges are extra and are not folded into that minimum.
     | - Storage invoices are customer charges. They do not create sales, purchases, or product stock.

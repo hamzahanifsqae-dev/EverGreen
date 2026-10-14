@@ -4,12 +4,26 @@
         $cashAccounts = $cashAccounts ?? ['cash_in_hand' => 0, 'cash_in_bank' => 0];
         $stock = $stock ?? ['packages' => 0, 'weight' => 0, 'lots' => 0];
         $occupancy = $occupancy ?? ['capacity' => 0, 'occupied' => 0, 'available' => 0, 'unit' => 'kg'];
+        $cardOccupancy = $cardOccupancy ?? $occupancy;
+        $cardChamberCount = $cardChamberCount ?? ($stats['chambers'] ?? 0);
+        $occupancyChamberOptions = $occupancyChamberOptions ?? [];
+        $occupancyChamberId = $occupancyChamberId ?? null;
         $trend = $trend ?? ['labels' => [], 'receipts' => [], 'dispatches' => []];
         $leaders = $leaders ?? ['customers' => []];
         $currency = $currency ?? 'PKR';
         $filterPeriodLabel = $filterPeriodLabel ?? 'All time';
         $insights = $insights ?? ['urls' => [], 'heatmap' => [], 'ageing' => [], 'chamber_heat' => []];
         $insightUrls = $insights['urls'] ?? [];
+
+        // The Alerts & Master Data card always renders; ageing and chamber fill
+        // are conditional. Size the grid to however many actually show, so the
+        // remaining cards fill the row instead of leaving empty columns.
+        $facilityCardCount = 1 + (! empty($insights['ageing']) ? 1 : 0) + (! empty($insights['chamber_heat']) ? 1 : 0);
+        $facilityGridClass = match ($facilityCardCount) {
+            1 => 'grid-cols-1',
+            2 => 'grid-cols-1 lg:grid-cols-2',
+            default => 'grid-cols-1 lg:grid-cols-3',
+        };
         $cashInHand = (float) ($cashAccounts['cash_in_hand'] ?? 0);
         $cashInBank = (float) ($cashAccounts['cash_in_bank'] ?? 0);
         $cashTotal = $cashInHand + $cashInBank;
@@ -61,6 +75,9 @@
         $occupancyPercent = $occupancy['capacity'] > 0
             ? round(($occupancy['occupied'] / $occupancy['capacity']) * 100, 1)
             : 0;
+        $cardOccupancyPercent = $cardOccupancy['capacity'] > 0
+            ? round(($cardOccupancy['occupied'] / $cardOccupancy['capacity']) * 100, 1)
+            : 0;
     @endphp
 
     <div
@@ -87,14 +104,13 @@
                 <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-200">{{ $filterPeriodLabel }}</span>
             </div>
 
-            <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+            <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
                 <div class="rounded-2xl bg-gradient-to-br from-blue-50 to-white p-5 shadow-sm ring-1 ring-blue-100 stats-panel stats-panel-blue dark:from-slate-950 dark:to-slate-950 dark:ring-blue-900/50">
                     <div class="flex items-center justify-between">
                         <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">Receiving</p>
                         <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-600 dark:bg-blue-900/40 dark:text-blue-200">IN</span>
                     </div>
                     <p class="mt-4 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ number_format((float) ($stats['receipt_packages'] ?? 0), 2) }}</p>
-                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Packages received (posted)</p>
                     <div class="mt-4 space-y-2 text-sm text-slate-700 dark:text-slate-300">
                         <div class="flex items-center justify-between">
                             <span>Posted receipts</span>
@@ -113,7 +129,6 @@
                         <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-200">OUT</span>
                     </div>
                     <p class="mt-4 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ number_format((float) ($stats['dispatch_packages'] ?? 0), 2) }}</p>
-                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Packages returned (posted)</p>
                     <div class="mt-4 space-y-2 text-sm text-slate-700 dark:text-slate-300">
                         <div class="flex items-center justify-between">
                             <span>Posted returns</span>
@@ -154,7 +169,6 @@
                         <span class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-600 dark:bg-amber-900/40 dark:text-amber-200">Charges</span>
                     </div>
                     <p class="mt-4 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ $currency }} {{ number_format((float) ($stats['due_amount'] ?? 0), 2) }}</p>
-                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Outstanding due</p>
                     <div class="mt-4 space-y-2 text-sm text-slate-700 dark:text-slate-300">
                         <div class="flex items-center justify-between">
                             <span>Bills with balance</span>
@@ -167,6 +181,76 @@
                         <div class="flex items-center justify-between">
                             <span>Billed amount</span>
                             <span class="font-medium text-slate-900 dark:text-slate-100">{{ $currency }} {{ number_format((float) ($stats['billed_amount'] ?? 0), 2) }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rounded-2xl bg-gradient-to-br from-sky-50 to-white p-5 shadow-sm ring-1 ring-sky-100 stats-panel stats-panel-sky dark:from-slate-950 dark:to-slate-950 dark:ring-sky-900/50">
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">Chamber Occupancy</p>
+                        <span class="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-600 dark:bg-sky-900/40 dark:text-sky-200">Capacity</span>
+                    </div>
+
+                    @if (! empty($occupancyChamberOptions))
+                        <div x-data="{ open: false }" class="relative mt-3" @click.outside="open = false">
+                            <button
+                                type="button"
+                                @click="open = ! open"
+                                class="flex w-full items-center justify-between rounded-lg border border-sky-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400 dark:border-sky-900/50 dark:bg-slate-900 dark:text-slate-200"
+                            >
+                                <span class="truncate">{{ $occupancyChamberOptions[$occupancyChamberId] ?? 'All chambers' }}</span>
+                                <svg class="h-3.5 w-3.5 flex-shrink-0 text-slate-400 transition-transform dark:text-slate-500" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+
+                            <div
+                                x-show="open"
+                                x-cloak
+                                x-transition
+                                class="absolute z-20 mt-1.5 max-h-56 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 text-xs shadow-lg dark:border-slate-700 dark:bg-slate-800"
+                            >
+                                <button
+                                    type="button"
+                                    wire:click="$set('occupancyChamberId', null)"
+                                    @click="open = false"
+                                    class="flex w-full items-center justify-between px-3 py-1.5 text-left text-slate-700 hover:bg-sky-50 dark:text-slate-200 dark:hover:bg-white/5"
+                                >
+                                    All chambers
+                                    @if (blank($occupancyChamberId))
+                                        <svg class="h-3.5 w-3.5 text-sky-600 dark:text-sky-300" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" /></svg>
+                                    @endif
+                                </button>
+                                @foreach ($occupancyChamberOptions as $id => $name)
+                                    <button
+                                        type="button"
+                                        wire:click="$set('occupancyChamberId', '{{ $id }}')"
+                                        @click="open = false"
+                                        class="flex w-full items-center justify-between px-3 py-1.5 text-left text-slate-700 hover:bg-sky-50 dark:text-slate-200 dark:hover:bg-white/5"
+                                    >
+                                        <span class="truncate">{{ $name }}</span>
+                                        @if ((string) $occupancyChamberId === (string) $id)
+                                            <svg class="h-3.5 w-3.5 flex-shrink-0 text-sky-600 dark:text-sky-300" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" /></svg>
+                                        @endif
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    <p class="mt-4 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ number_format($cardOccupancyPercent, 1) }}%</p>
+                    <div class="mt-4 space-y-2 text-sm text-slate-700 dark:text-slate-300">
+                        <div class="flex items-center justify-between">
+                            <span>Active chambers</span>
+                            <span class="font-medium text-slate-900 dark:text-slate-100">{{ number_format($cardChamberCount) }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span>Occupied</span>
+                            <span class="font-medium text-slate-900 dark:text-slate-100">{{ number_format($cardOccupancy['occupied'] ?? 0, 2) }} {{ $cardOccupancy['unit'] }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span>Available</span>
+                            <span class="font-medium text-slate-900 dark:text-slate-100">{{ number_format($cardOccupancy['available'] ?? 0, 2) }} {{ $cardOccupancy['unit'] }}</span>
                         </div>
                     </div>
                 </div>
@@ -203,64 +287,68 @@
             </div>
         </div>
 
-        {{-- Top depositors + chamber health --}}
+        {{-- Storage insights + facility health --}}
         <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5 stats-card dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-700/40">
             <div class="flex items-center justify-between">
                 <p class="text-lg font-semibold text-slate-900 dark:text-slate-100">Facility Snapshot</p>
                 <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-200">Live</span>
             </div>
 
-            <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-                <div class="rounded-2xl bg-gradient-to-br from-blue-50 to-white p-5 shadow-sm ring-1 ring-blue-100 dark:from-slate-950 dark:to-slate-950 dark:ring-blue-900/40 lg:col-span-1">
-                    <div class="flex items-center justify-between">
-                        <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">Top Depositors</p>
-                        <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-600 dark:bg-blue-900/40 dark:text-blue-200">Receipts</span>
-                    </div>
-                    <div class="mt-4 space-y-3">
-                        @forelse (($leaders['customers'] ?? []) as $index => $row)
-                            <div class="rounded-xl bg-white p-3 ring-1 ring-slate-100 dark:bg-slate-800/80 dark:ring-slate-700/40">
-                                <div class="flex items-start justify-between gap-3">
-                                    <div class="flex items-start gap-3">
-                                        <span class="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700 dark:bg-blue-900/40 dark:text-blue-200">{{ $index + 1 }}</span>
-                                        <div>
-                                            <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ $row['name'] }}</p>
-                                            <p class="text-xs text-slate-500 dark:text-slate-400">{{ number_format($row['count']) }} posted receipts</p>
+            <div class="mt-6 grid gap-6 {{ $facilityGridClass }}">
+                @if (! empty($insights['ageing']))
+                    <div class="rounded-2xl bg-gradient-to-br from-orange-50 to-white p-5 shadow-sm ring-1 ring-orange-100 dark:from-slate-950 dark:to-slate-950 dark:ring-orange-900/40 lg:col-span-1">
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">Oldest lots in store</p>
+                            @if ($insightUrls['ageing'] ?? null)
+                                <a href="{{ $insightUrls['ageing'] }}" class="rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-600 hover:underline dark:bg-orange-900/40 dark:text-orange-200">View all</a>
+                            @else
+                                <span class="rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-600 dark:bg-orange-900/40 dark:text-orange-200">Ageing</span>
+                            @endif
+                        </div>
+                        <div class="mt-4 space-y-3">
+                            @foreach ($insights['ageing'] as $index => $row)
+                                <div class="rounded-xl bg-white p-3 ring-1 ring-slate-100 dark:bg-slate-800/80 dark:ring-slate-700/40">
+                                    <div class="flex items-start justify-between gap-3">
+                                        <div class="flex items-start gap-3">
+                                            <span class="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-orange-700 dark:bg-orange-900/40 dark:text-orange-200">{{ $index + 1 }}</span>
+                                            <div>
+                                                <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ $row['lot_number'] }}</p>
+                                                <p class="text-xs text-slate-500 dark:text-slate-400">{{ $row['customer'] }}</p>
+                                            </div>
                                         </div>
+                                        <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ number_format($row['days_in_store']) }} d</p>
                                     </div>
-                                    <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ number_format($row['count']) }}</p>
                                 </div>
-                            </div>
-                        @empty
-                            <p class="text-sm text-slate-500 dark:text-slate-400">No depositor receipt data available.</p>
-                        @endforelse
+                            @endforeach
+                        </div>
                     </div>
-                </div>
+                @endif
 
-                <div class="rounded-2xl bg-gradient-to-br from-sky-50 to-white p-5 shadow-sm ring-1 ring-sky-100 stats-panel stats-panel-sky dark:from-slate-950 dark:to-slate-950 dark:ring-sky-900/40 lg:col-span-1">
-                    <div class="flex items-center justify-between">
-                        <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">Chamber Occupancy</p>
-                        <span class="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-600 dark:bg-sky-900/40 dark:text-sky-200">Capacity</span>
+                @if (! empty($insights['chamber_heat']))
+                    <div class="rounded-2xl bg-gradient-to-br from-sky-50 to-white p-5 shadow-sm ring-1 ring-sky-100 dark:from-slate-950 dark:to-slate-950 dark:ring-sky-900/40 lg:col-span-1">
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">Chamber fill</p>
+                            @if ($insightUrls['heatmap'] ?? null)
+                                <a href="{{ $insightUrls['heatmap'] }}" class="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-600 hover:underline dark:bg-sky-900/40 dark:text-sky-200">Heatmap</a>
+                            @else
+                                <span class="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-600 dark:bg-sky-900/40 dark:text-sky-200">Capacity</span>
+                            @endif
+                        </div>
+                        <div class="mt-4 space-y-3">
+                            @foreach ($insights['chamber_heat'] as $row)
+                                <div class="rounded-xl bg-white p-3 ring-1 ring-slate-100 dark:bg-slate-800/80 dark:ring-slate-700/40">
+                                    <div class="flex items-center justify-between gap-3 text-sm">
+                                        <span class="font-medium text-slate-900 dark:text-slate-100">{{ $row['name'] }}</span>
+                                        <span class="font-semibold text-slate-900 dark:text-slate-100">{{ number_format($row['percent'], 1) }}%</span>
+                                    </div>
+                                    <div class="mt-2 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
+                                        <div class="h-full rounded-full bg-sky-500" style="width: {{ min(100, max(0, $row['percent'])) }}%"></div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
-                    <p class="mt-4 text-3xl font-semibold text-slate-900 dark:text-slate-100">{{ number_format($occupancyPercent, 1) }}%</p>
-                    <div class="mt-4 space-y-2 text-sm text-slate-700 dark:text-slate-300">
-                        <div class="flex items-center justify-between">
-                            <span>Active chambers</span>
-                            <span class="font-medium text-slate-900 dark:text-slate-100">{{ number_format($stats['chambers'] ?? 0) }}</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span>Occupied</span>
-                            <span class="font-medium text-slate-900 dark:text-slate-100">{{ number_format($occupancy['occupied'] ?? 0, 2) }} {{ $occupancy['unit'] }}</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span>Available</span>
-                            <span class="font-medium text-slate-900 dark:text-slate-100">{{ number_format($occupancy['available'] ?? 0, 2) }} {{ $occupancy['unit'] }}</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span>Total capacity</span>
-                            <span class="font-medium text-slate-900 dark:text-slate-100">{{ number_format($occupancy['capacity'] ?? 0, 2) }} {{ $occupancy['unit'] }}</span>
-                        </div>
-                    </div>
-                </div>
+                @endif
 
                 <div class="rounded-2xl bg-gradient-to-br from-rose-50 to-white p-5 shadow-sm ring-1 ring-rose-100 stats-panel stats-panel-rose dark:from-slate-950 dark:to-slate-950 dark:ring-rose-900/40 lg:col-span-1">
                     <div class="flex items-center justify-between">
@@ -299,71 +387,6 @@
             </div>
         </div>
 
-        @if (! empty($insights['ageing']) || ! empty($insights['chamber_heat']))
-            <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5 stats-card dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-700/40">
-                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <p class="text-lg font-semibold text-slate-900 dark:text-slate-100">Storage insights</p>
-                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-200">Live</span>
-                </div>
-
-                <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-                    @if (! empty($insights['ageing']))
-                        <div class="rounded-2xl bg-gradient-to-br from-orange-50 to-white p-5 shadow-sm ring-1 ring-orange-100 dark:from-slate-950 dark:to-slate-950 dark:ring-orange-900/40">
-                            <div class="flex items-center justify-between">
-                                <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">Oldest lots in store</p>
-                                @if ($insightUrls['ageing'] ?? null)
-                                    <a href="{{ $insightUrls['ageing'] }}" class="rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-600 hover:underline dark:bg-orange-900/40 dark:text-orange-200">View all</a>
-                                @else
-                                    <span class="rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-600 dark:bg-orange-900/40 dark:text-orange-200">Ageing</span>
-                                @endif
-                            </div>
-                            <div class="mt-4 space-y-3">
-                                @foreach ($insights['ageing'] as $index => $row)
-                                    <div class="rounded-xl bg-white p-3 ring-1 ring-slate-100 dark:bg-slate-800/80 dark:ring-slate-700/40">
-                                        <div class="flex items-start justify-between gap-3">
-                                            <div class="flex items-start gap-3">
-                                                <span class="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-orange-700 dark:bg-orange-900/40 dark:text-orange-200">{{ $index + 1 }}</span>
-                                                <div>
-                                                    <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ $row['lot_number'] }}</p>
-                                                    <p class="text-xs text-slate-500 dark:text-slate-400">{{ $row['customer'] }}</p>
-                                                </div>
-                                            </div>
-                                            <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ number_format($row['days_in_store']) }} d</p>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-
-                    @if (! empty($insights['chamber_heat']))
-                        <div class="rounded-2xl bg-gradient-to-br from-sky-50 to-white p-5 shadow-sm ring-1 ring-sky-100 dark:from-slate-950 dark:to-slate-950 dark:ring-sky-900/40">
-                            <div class="flex items-center justify-between">
-                                <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">Chamber fill</p>
-                                @if ($insightUrls['heatmap'] ?? null)
-                                    <a href="{{ $insightUrls['heatmap'] }}" class="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-600 hover:underline dark:bg-sky-900/40 dark:text-sky-200">Heatmap</a>
-                                @else
-                                    <span class="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-600 dark:bg-sky-900/40 dark:text-sky-200">Capacity</span>
-                                @endif
-                            </div>
-                            <div class="mt-4 space-y-3">
-                                @foreach ($insights['chamber_heat'] as $row)
-                                    <div class="rounded-xl bg-white p-3 ring-1 ring-slate-100 dark:bg-slate-800/80 dark:ring-slate-700/40">
-                                        <div class="flex items-center justify-between gap-3 text-sm">
-                                            <span class="font-medium text-slate-900 dark:text-slate-100">{{ $row['name'] }}</span>
-                                            <span class="font-semibold text-slate-900 dark:text-slate-100">{{ number_format($row['percent'], 1) }}%</span>
-                                        </div>
-                                        <div class="mt-2 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
-                                            <div class="h-full rounded-full bg-sky-500" style="width: {{ min(100, max(0, $row['percent'])) }}%"></div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-                </div>
-            </div>
-        @endif
 
         {{-- Operations Pulse --}}
         <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5 stats-card dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-700/40">
@@ -436,20 +459,22 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="mt-4 grid grid-cols-6 gap-3">
-                                @foreach ($labels as $index => $label)
-                                    <div class="flex flex-col items-center gap-2">
-                                        <div class="relative flex h-48 items-end gap-1">
-                                            <div class="relative w-3 rounded-full bg-blue-500" style="height: {{ $barHeights['receipts'][$index] ?? 0 }}%;" x-show="showReceipts">
-                                                <span class="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-semibold text-slate-700">{{ number_format($receiptSeries[$index] ?? 0) }}</span>
+                            <div class="mt-4 overflow-x-auto">
+                                <div class="grid grid-cols-6 gap-3 min-w-[420px] sm:min-w-0">
+                                    @foreach ($labels as $index => $label)
+                                        <div class="flex flex-col items-center gap-2">
+                                            <div class="relative flex h-48 items-end gap-1">
+                                                <div class="relative w-3 rounded-full bg-blue-500" style="height: {{ $barHeights['receipts'][$index] ?? 0 }}%;" x-show="showReceipts">
+                                                    <span class="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-semibold text-slate-700">{{ number_format($receiptSeries[$index] ?? 0) }}</span>
+                                                </div>
+                                                <div class="relative w-3 rounded-full bg-emerald-500" style="height: {{ $barHeights['dispatches'][$index] ?? 0 }}%;" x-show="showDispatches">
+                                                    <span class="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-semibold text-slate-700">{{ number_format($dispatchSeries[$index] ?? 0) }}</span>
+                                                </div>
                                             </div>
-                                            <div class="relative w-3 rounded-full bg-emerald-500" style="height: {{ $barHeights['dispatches'][$index] ?? 0 }}%;" x-show="showDispatches">
-                                                <span class="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-semibold text-slate-700">{{ number_format($dispatchSeries[$index] ?? 0) }}</span>
-                                            </div>
+                                            <span class="text-xs text-slate-500 dark:text-slate-400">{{ $label }}</span>
                                         </div>
-                                        <span class="text-xs text-slate-500 dark:text-slate-400">{{ $label }}</span>
-                                    </div>
-                                @endforeach
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
                     </div>

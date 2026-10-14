@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\IsAuditedUuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use OwenIt\Auditing\Contracts\Auditable;
 
 class ColdStorageBillLine extends Model implements Auditable
@@ -42,5 +43,10 @@ class ColdStorageBillLine extends Model implements Auditable
     public function rateCard(): BelongsTo
     {
         return $this->belongsTo(ColdStorageRateCard::class, 'rate_card_id');
+    }
+
+    public function entitlements(): HasMany
+    {
+        return $this->hasMany(ColdStorageBilledEntitlement::class, 'bill_line_id');
     }
 }

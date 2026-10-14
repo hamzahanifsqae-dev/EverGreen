@@ -9,7 +9,10 @@ use App\Models\ColdStorageMovement;
 use App\Models\ColdStorageReceipt;
 use App\Models\ColdStorageReceiptItem;
 use App\Models\Customer;
+use App\Models\Merchant;
 use App\Models\Product;
+use App\Models\User;
+use App\Support\ColdStorageAccess;
 use Illuminate\Support\Collection;
 
 class CustomerStorageOverviewService
@@ -32,14 +35,16 @@ class CustomerStorageOverviewService
      *     stock_on_hand: list<array<string, mixed>>,
      * }
      */
-    public function forCustomer(Customer $customer): array
+    public function forCustomer(Customer $customer, Merchant|User|null $user = null): array
     {
         $merchantId = (string) $customer->merchant_id;
         $customerId = (string) $customer->id;
+        $branchIds = ColdStorageAccess::authorizedBranchIds($user);
 
         $receipts = ColdStorageReceipt::query()
             ->where('merchant_id', $merchantId)
             ->where('customer_id', $customerId)
+            ->when($branchIds !== null, fn ($query) => $query->whereIn('branch_id', $branchIds))
             ->with(['branch', 'items'])
             ->orderByDesc('received_on')
             ->orderByDesc('created_at')
@@ -48,6 +53,7 @@ class CustomerStorageOverviewService
         $returns = ColdStorageDispatch::query()
             ->where('merchant_id', $merchantId)
             ->where('customer_id', $customerId)
+            ->when($branchIds !== null, fn ($query) => $query->whereIn('branch_id', $branchIds))
             ->with(['branch', 'lines'])
             ->orderByDesc('dispatched_on')
             ->orderByDesc('created_at')
@@ -70,7 +76,7 @@ class CustomerStorageOverviewService
             ->whereIn('dispatch_id', $postedReturnIds)
             ->sum('net_weight'));
 
-        $stockOnHand = $this->stockOnHand($merchantId, $customerId);
+        $stockOnHand = $this->stockOnHand($merchantId, $customerId, $branchIds);
         $packagesOnHand = Quantities::roundQuantity((float) collect($stockOnHand)->sum('packages'));
         $weightOnHand = Quantities::roundQuantity((float) collect($stockOnHand)->sum('weight'));
 
@@ -109,14 +115,16 @@ class CustomerStorageOverviewService
     }
 
     /**
+     * @param  list<string>|null  $branchIds
      * @return list<array<string, mixed>>
      */
-    private function stockOnHand(string $merchantId, string $customerId): array
+    private function stockOnHand(string $merchantId, string $customerId, ?array $branchIds = null): array
     {
         /** @var Collection<int, object> $rows */
         $rows = ColdStorageMovement::query()
             ->where('merchant_id', $merchantId)
             ->where('customer_id', $customerId)
+            ->when($branchIds !== null, fn ($query) => $query->whereIn('branch_id', $branchIds))
             ->selectRaw('lot_number, product_id, chamber_id, sum(package_delta) as packages, sum(weight_delta) as weight, max(weight_unit) as weight_unit')
             ->groupBy('lot_number', 'product_id', 'chamber_id')
             ->havingRaw('SUM(package_delta) > 0.0005 OR SUM(weight_delta) > 0.0005')

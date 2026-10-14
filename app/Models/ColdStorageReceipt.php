@@ -41,7 +41,7 @@ class ColdStorageReceipt extends Model implements Auditable
     use SoftDeletes;
 
     protected $fillable = [
-        'merchant_id', 'business_id', 'branch_id', 'customer_id', 'receipt_no', 'received_on',
+        'merchant_id', 'business_id', 'branch_id', 'customer_id', 'receipt_no', 'legacy_reference', 'received_on',
         'vehicle_number', 'notes', 'status', 'posted_at', 'posted_by', 'cancelled_at', 'cancelled_by',
         'cancellation_reason', 'created_by',
     ];

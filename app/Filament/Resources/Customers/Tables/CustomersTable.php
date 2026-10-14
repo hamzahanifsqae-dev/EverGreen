@@ -43,6 +43,22 @@ class CustomersTable
                 TextColumn::make('phone')
                     ->searchable(),
 
+                TextColumn::make('account_code')
+                    ->label('Account code')
+                    ->toggleable()
+                    ->searchable(),
+
+                BadgeColumn::make('storage_billing_preference')
+                    ->label('Billing preference')
+                    ->toggleable()
+                    ->placeholder('Not set')
+                    ->formatStateUsing(fn (?string $state): string => $state ? (Customer::storageBillingPreferenceOptions()[$state] ?? $state) : 'Not set')
+                    ->color(fn (?string $state): string => match ($state) {
+                        Customer::BILLING_PREFERENCE_PERIODIC => 'info',
+                        Customer::BILLING_PREFERENCE_ON_WITHDRAWAL => 'success',
+                        default => 'gray',
+                    }),
+
                 TextColumn::make('email')
                     ->label('Email address')
                     ->limit(30)

@@ -42,18 +42,21 @@ class DemoVisitorSessionTest extends TestCase
 
     public function test_demo_login_resumes_existing_visitor_timer(): void
     {
-        $sessionId = Str::uuid()->toString();
-        $merchant = $this->createTemporaryMerchant($sessionId);
-
-        DemoVisitorSession::query()->create([
-            'id' => $sessionId,
+        // DemoVisitorSession::$fillable does not include 'id', so an explicit
+        // 'id' in create() is silently dropped by mass-assignment and HasUuids
+        // assigns its own ordered UUID instead. Read back the real id and key
+        // the merchant's session-derived email off that, not the intended one,
+        // so the "resume" path computes the same email the first call did.
+        $createdSession = DemoVisitorSession::query()->create([
             'visitor_hash' => DemoAccount::visitorFingerprint(),
-            'merchant_id' => $merchant->id,
             'ip_address' => '127.0.0.1',
             'started_at' => now()->subMinutes(20),
             'expires_at' => now()->addMinutes(10),
             'last_seen_at' => now()->subMinutes(5),
         ]);
+
+        $merchant = $this->createTemporaryMerchant($createdSession->id);
+        $createdSession->update(['merchant_id' => $merchant->id]);
 
         $this->get(route('demo.exit'));
         $this->get(route('demo.login'))->assertRedirect('/merchant');
@@ -71,18 +74,16 @@ class DemoVisitorSessionTest extends TestCase
 
     public function test_expired_visitor_cannot_start_demo_again(): void
     {
-        $sessionId = Str::uuid()->toString();
-        $merchant = $this->createTemporaryMerchant($sessionId);
-
-        DemoVisitorSession::query()->create([
-            'id' => $sessionId,
+        $createdSession = DemoVisitorSession::query()->create([
             'visitor_hash' => DemoAccount::visitorFingerprint(),
-            'merchant_id' => $merchant->id,
             'ip_address' => '127.0.0.1',
             'started_at' => now()->subMinutes(40),
             'expires_at' => now()->subMinutes(10),
             'last_seen_at' => now()->subMinutes(10),
         ]);
+
+        $merchant = $this->createTemporaryMerchant($createdSession->id);
+        $createdSession->update(['merchant_id' => $merchant->id]);
 
         $response = $this->get(route('demo.login'));
 
@@ -106,13 +107,20 @@ class DemoVisitorSessionTest extends TestCase
 
     private function createTemporaryMerchant(string $sessionId): Merchant
     {
-        return Merchant::query()->create([
-            'id' => Str::uuid()->toString(),
-            'email' => DemoAccount::temporaryEmailForSession($sessionId),
-            'name' => 'EverGreen Cold Storage Demo',
-            'status' => Merchant::STATUS_VERIFIED,
-            'is_active' => true,
-            'password' => 'Demo@123456',
-        ]);
+        // Mirrors the real TemporaryDemoProvisioner: reuse the merchant already
+        // provisioned for this session's email instead of creating a duplicate,
+        // so a "resume" call behaves the same as the real implementation.
+        return Merchant::query()->firstOrCreate(
+            ['email' => DemoAccount::temporaryEmailForSession($sessionId)],
+            [
+                'id' => Str::uuid()->toString(),
+                'name' => 'EverGreen Cold Storage Demo',
+                'address_line_1' => 'Demo City',
+                'city' => 'Karachi',
+                'status' => Merchant::STATUS_VERIFIED,
+                'is_active' => true,
+                'password' => 'Demo@123456',
+            ],
+        );
     }
 }

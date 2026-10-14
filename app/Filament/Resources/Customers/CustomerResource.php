@@ -7,6 +7,7 @@ use App\Filament\Resources\Customers\Pages\CreateCustomer;
 use App\Filament\Resources\Customers\Pages\EditCustomer;
 use App\Filament\Resources\Customers\Pages\ListCustomers;
 use App\Filament\Resources\Customers\Pages\ViewCustomerColdStorage;
+use App\Filament\Resources\Customers\Pages\ViewCustomerLedger;
 use App\Filament\Resources\Customers\Pages\ViewCustomerSales;
 use App\Filament\Resources\Customers\Schemas\CustomerForm;
 use App\Filament\Resources\Customers\Tables\CustomersTable;
@@ -93,6 +94,7 @@ class CustomerResource extends Resource
             'index' => ListCustomers::route('/'),
             'create' => CreateCustomer::route('/create'),
             'cold-storage' => ViewCustomerColdStorage::route('/{record}/cold-storage'),
+            'ledger' => ViewCustomerLedger::route('/{record}/ledger'),
             'sales' => ViewCustomerSales::route('/{record}/sales'),
             'edit' => EditCustomer::route('/{record}/edit'),
         ];

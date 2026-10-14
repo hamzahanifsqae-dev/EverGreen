@@ -27,7 +27,7 @@ class ColdStorageReceiptItem extends Model implements Auditable
     use IsAuditedUuid;
 
     protected $fillable = [
-        'receipt_id', 'product_id', 'product_variant_id', 'lot_number', 'package_count', 'net_weight', 'weight_unit', 'notes',
+        'receipt_id', 'product_id', 'product_variant_id', 'lot_number', 'marks', 'package_count', 'net_weight', 'weight_unit', 'notes',
     ];
 
     protected $casts = [

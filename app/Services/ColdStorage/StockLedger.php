@@ -64,11 +64,8 @@ class StockLedger
 
             $packages = Quantities::roundQuantity((float) $data['package_delta']);
             $weight = Quantities::roundQuantity((float) $data['weight_delta']);
-            $balance = $this->balance($data);
 
-            if (Quantities::isNegative($balance['packages'] + $packages) || Quantities::isNegative($balance['weight'] + $weight)) {
-                throw ColdStorageException::make('This withdrawal is above the available customer stock for the selected lot and location.');
-            }
+            $this->assertNoNegativeHistoricalBalance($data, $packages, $weight);
 
             $capacityDelta = Quantities::capacityDelta(
                 (string) $chamber->capacity_unit,
@@ -212,6 +209,46 @@ class StockLedger
                 fn (Builder $query) => $query->where('location_id', $data['location_id']),
                 fn (Builder $query) => $query->whereNull('location_id'),
             );
+    }
+
+    /**
+     * Walk the balance chronologically from this event's date forward, checking every
+     * checkpoint date that already has a movement so a backdated insert cannot create
+     * a negative balance at any point in history, not just in the current total.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function assertNoNegativeHistoricalBalance(array $data, float $packageDelta, float $weightDelta): void
+    {
+        $newDate = (string) $data['occurred_on'];
+
+        $rows = $this->balanceQuery($data)
+            ->orderBy('occurred_on')
+            ->get(['occurred_on', 'package_delta', 'weight_delta']);
+
+        $checkpoints = $rows->pluck('occurred_on')
+            ->map(fn ($date): string => $date->toDateString())
+            ->push($newDate)
+            ->unique()
+            ->filter(fn (string $date): bool => $date >= $newDate)
+            ->sort()
+            ->values();
+
+        foreach ($checkpoints as $checkpoint) {
+            $priorRows = $rows->filter(fn ($row): bool => $row->occurred_on->toDateString() <= $checkpoint);
+
+            $packages = Quantities::roundQuantity((float) $priorRows->sum('package_delta'));
+            $weight = Quantities::roundQuantity((float) $priorRows->sum('weight_delta'));
+
+            if ($newDate <= $checkpoint) {
+                $packages = Quantities::roundQuantity($packages + $packageDelta);
+                $weight = Quantities::roundQuantity($weight + $weightDelta);
+            }
+
+            if (Quantities::isNegative($packages) || Quantities::isNegative($weight)) {
+                throw ColdStorageException::make('This withdrawal is above the available customer stock for the selected lot and location.');
+            }
+        }
     }
 
     private function assertReversalIsOpen(string $movementId): void

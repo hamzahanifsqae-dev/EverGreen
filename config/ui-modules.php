@@ -26,6 +26,8 @@ return [
         'cold_storage_quick_bill' => true,
         'cold_storage_capacity_heatmap' => true,
         'cold_storage_reservations' => true,
+        'cold_storage_stock_register' => true,
+        'cold_storage_rent_register' => true,
         'customers' => true,
         'products' => true,
         'categories' => true,

@@ -5,6 +5,10 @@ namespace App\Services\ColdStorage;
 use App\Exceptions\ColdStorageException;
 use App\Models\Branch;
 use App\Models\ColdStorageBill;
+use App\Models\ColdStorageBillAllocation;
+use App\Models\ColdStorageBilledEntitlement;
+use App\Models\ColdStorageDispatch;
+use App\Models\ColdStorageDispatchLine;
 use App\Models\ColdStorageMovement;
 use App\Models\ColdStorageRateCard;
 use App\Models\ColdStorageReceiptItem;
@@ -50,6 +54,48 @@ class BillingService
             'paid_amount' => 0,
             'due_amount' => 0,
             'notes' => $data['notes'] ?? null,
+            'created_by' => $actorId,
+        ]);
+
+        return $bill->refresh();
+    }
+
+    /**
+     * Draft a bill scoped to one withdrawal and its lots only, instead of every
+     * receipt item the customer owns in the branch. Defaults the period to the
+     * earliest arrival date among the withdrawn lots through the withdrawal date.
+     */
+    public function createDraftFromDispatch(ColdStorageDispatch $dispatch, ?string $actorId, ?string $periodStart = null): ColdStorageBill
+    {
+        $dispatch->loadMissing('lines.receiptItem.receipt');
+
+        if ($dispatch->lines->isEmpty()) {
+            throw ColdStorageException::make('This withdrawal has no lines to bill.');
+        }
+
+        $periodStart ??= $dispatch->lines
+            ->map(fn ($line) => $line->receiptItem?->receipt?->received_on)
+            ->filter()
+            ->min()
+            ?->toDateString();
+
+        $bill = ColdStorageBill::query()->create([
+            'merchant_id' => $dispatch->merchant_id,
+            'business_id' => $dispatch->business_id,
+            'branch_id' => $dispatch->branch_id,
+            'customer_id' => $dispatch->customer_id,
+            'dispatch_id' => $dispatch->id,
+            'bill_no' => 'SB-'.date('Ymd').'-'.strtoupper(substr(uniqid(), -6)),
+            'period_start' => $periodStart ?? $dispatch->dispatched_on->toDateString(),
+            'period_end' => $dispatch->dispatched_on->toDateString(),
+            'charge_basis' => 'bag',
+            'charge_period' => 'daily',
+            'status' => 'draft',
+            'storage_total' => 0,
+            'service_total' => 0,
+            'total_amount' => 0,
+            'paid_amount' => 0,
+            'due_amount' => 0,
             'created_by' => $actorId,
         ]);
 
@@ -103,7 +149,18 @@ class BillingService
             $bill->lines()->delete();
 
             foreach ($preview['lines'] as $line) {
-                $bill->lines()->create($line);
+                $daily = $line['daily_breakdown'] ?? [];
+                unset($line['daily_breakdown']);
+
+                $billLine = $bill->lines()->create($line);
+
+                foreach ($daily as $occurredOn => $quantity) {
+                    $billLine->entitlements()->create([
+                        'receipt_item_id' => $line['receipt_item_id'],
+                        'occurred_on' => $occurredOn,
+                        'quantity' => $quantity,
+                    ]);
+                }
             }
 
             foreach ($bill->services as $service) {
@@ -196,17 +253,12 @@ class BillingService
                 'created_by' => $actorId,
             ]);
 
-            $paid = round((float) $bill->payments()->sum('amount'), 2);
-
-            $bill->update([
-                'paid_amount' => $paid,
-                'due_amount' => round(max(0, (float) $bill->total_amount - $paid), 2),
-            ]);
-
             $merchant = Merchant::query()->whereKey($bill->merchant_id)->lockForUpdate()->firstOrFail();
             $merchant->update([
                 $account => round((float) ($merchant->{$account} ?? 0) + $amount, 2),
             ]);
+
+            $this->recomputeBillTotals($bill);
 
             return $payment;
         });
@@ -224,6 +276,192 @@ class BillingService
         };
     }
 
+    /**
+     * Record an advance/partial payment that is not yet tied to a specific bill. The
+     * cash lands in the merchant's account immediately; applying it to a bill later
+     * (allocateAdvanceToBill) is a separate, cash-neutral step so cash is never
+     * recorded twice.
+     */
+    public function recordAdvancePayment(Customer $customer, float $amount, string $date, ?string $method, ?string $actorId): Payment
+    {
+        return DB::transaction(function () use ($customer, $amount, $date, $method, $actorId): Payment {
+            $amount = round($amount, 2);
+
+            if ($amount <= 0) {
+                throw ColdStorageException::make('Advance amount must be greater than zero.');
+            }
+
+            $account = $this->cashAccountForMethod($method);
+
+            $payment = Payment::query()->create([
+                'merchant_id' => $customer->merchant_id,
+                'paymentable_type' => Customer::class,
+                'paymentable_id' => $customer->id,
+                'party_type' => Customer::class,
+                'party_id' => $customer->id,
+                'direction' => 'in',
+                'entry_type' => 'advance',
+                'amount' => $amount,
+                'unallocated_amount' => $amount,
+                'payment_date' => $date,
+                'method' => $account,
+                'notes' => 'Cold storage advance',
+                'created_by' => $actorId,
+            ]);
+
+            $merchant = Merchant::query()->whereKey($customer->merchant_id)->lockForUpdate()->firstOrFail();
+            $merchant->update([
+                $account => round((float) ($merchant->{$account} ?? 0) + $amount, 2),
+            ]);
+
+            return $payment;
+        });
+    }
+
+    /**
+     * Apply part or all of an unallocated advance to a posted bill. This never touches
+     * the merchant's cash accounts again (the cash was already recorded when the
+     * advance was received) — it only moves credit from "unallocated" to "applied to
+     * this bill", so the customer statement never counts it twice.
+     */
+    public function allocateAdvanceToBill(Payment $advance, ColdStorageBill $bill, float $amount, string $date, ?string $actorId): ColdStorageBillAllocation
+    {
+        return DB::transaction(function () use ($advance, $bill, $amount, $date, $actorId): ColdStorageBillAllocation {
+            $advance = Payment::query()->whereKey($advance->id)->lockForUpdate()->firstOrFail();
+            $bill = ColdStorageBill::query()->whereKey($bill->id)->lockForUpdate()->firstOrFail();
+            $amount = round($amount, 2);
+
+            if (! $advance->isUnallocatedAdvance()) {
+                throw ColdStorageException::make('Only an unallocated advance can be applied to a bill.');
+            }
+
+            if ($advance->party_type !== Customer::class || $advance->party_id !== $bill->customer_id) {
+                throw ColdStorageException::make('This advance belongs to a different customer.');
+            }
+
+            if (! $bill->isPosted()) {
+                throw ColdStorageException::make('Only a posted bill can receive an allocation.');
+            }
+
+            if ($amount <= 0) {
+                throw ColdStorageException::make('Allocation amount must be greater than zero.');
+            }
+
+            if ($amount - (float) $advance->unallocated_amount > 0.009) {
+                throw ColdStorageException::make('This advance only has '.number_format((float) $advance->unallocated_amount, 2).' left unallocated.');
+            }
+
+            if ($amount - (float) $bill->due_amount > 0.009) {
+                throw ColdStorageException::make("Allocation cannot exceed the bill's outstanding balance of ".number_format((float) $bill->due_amount, 2).'.');
+            }
+
+            $allocation = ColdStorageBillAllocation::query()->create([
+                'merchant_id' => $bill->merchant_id,
+                'bill_id' => $bill->id,
+                'payment_id' => $advance->id,
+                'amount' => $amount,
+                'allocated_on' => $date,
+                'created_by' => $actorId,
+            ]);
+
+            $advance->update([
+                'unallocated_amount' => round((float) $advance->unallocated_amount - $amount, 2),
+            ]);
+
+            $this->recomputeBillTotals($bill);
+
+            return $allocation;
+        });
+    }
+
+    public function reverseAllocation(ColdStorageBillAllocation $allocation, ?string $actorId, string $reason): ColdStorageBillAllocation
+    {
+        $reason = trim($reason);
+
+        if ($reason === '') {
+            throw ColdStorageException::make('A reversal reason is required.');
+        }
+
+        return DB::transaction(function () use ($allocation, $actorId, $reason): ColdStorageBillAllocation {
+            $allocation = ColdStorageBillAllocation::query()->whereKey($allocation->id)->lockForUpdate()->firstOrFail();
+
+            if ($allocation->isReversed()) {
+                throw ColdStorageException::make('This allocation has already been reversed.');
+            }
+
+            $advance = Payment::query()->whereKey($allocation->payment_id)->lockForUpdate()->firstOrFail();
+            $bill = ColdStorageBill::query()->whereKey($allocation->bill_id)->lockForUpdate()->firstOrFail();
+
+            $allocation->update([
+                'reversed_at' => now(),
+                'reversed_by' => $actorId,
+                'reversal_reason' => $reason,
+            ]);
+
+            $advance->update([
+                'unallocated_amount' => round((float) $advance->unallocated_amount + (float) $allocation->amount, 2),
+            ]);
+
+            $this->recomputeBillTotals($bill);
+
+            return $allocation->refresh();
+        });
+    }
+
+    /**
+     * Refund the still-unallocated remainder of an advance. A portion already applied
+     * to a bill must be reversed first (reverseAllocation), so cash is never both
+     * refunded and left standing against a bill at the same time.
+     */
+    public function refundUnallocatedAdvance(Payment $advance, float $amount, ?string $actorId, string $reason): Payment
+    {
+        $reason = trim($reason);
+
+        if ($reason === '') {
+            throw ColdStorageException::make('A refund reason is required.');
+        }
+
+        return DB::transaction(function () use ($advance, $amount, $actorId, $reason): Payment {
+            $advance = Payment::query()->whereKey($advance->id)->lockForUpdate()->firstOrFail();
+            $amount = round($amount, 2);
+
+            if (! $advance->isUnallocatedAdvance()) {
+                throw ColdStorageException::make('Only an advance can be refunded this way.');
+            }
+
+            if ($amount <= 0 || $amount - (float) $advance->unallocated_amount > 0.009) {
+                throw ColdStorageException::make('Refund cannot exceed the unallocated balance of '.number_format((float) $advance->unallocated_amount, 2).'.');
+            }
+
+            $account = $this->cashAccountForMethod($advance->method);
+            $merchant = Merchant::query()->whereKey($advance->merchant_id)->lockForUpdate()->firstOrFail();
+            $merchant->update([
+                $account => round((float) ($merchant->{$account} ?? 0) - $amount, 2),
+            ]);
+
+            $advance->update([
+                'unallocated_amount' => round((float) $advance->unallocated_amount - $amount, 2),
+                'notes' => trim(((string) $advance->notes).' | Refunded '.number_format($amount, 2).' on '.now()->toDateString().': '.$reason),
+            ]);
+
+            return $advance->refresh();
+        });
+    }
+
+    private function recomputeBillTotals(ColdStorageBill $bill): void
+    {
+        $paid = round(
+            (float) $bill->payments()->sum('amount')
+                + (float) $bill->allocations()->whereNull('reversed_at')->sum('amount'),
+            2
+        );
+
+        $bill->update([
+            'paid_amount' => $paid,
+            'due_amount' => round(max(0, (float) $bill->total_amount - $paid), 2),
+        ]);
+    }
+
     public function serviceAmount(string $basis, float $quantity, float $rate): float
     {
         if ($basis === 'flat') {
@@ -238,15 +476,25 @@ class BillingService
      */
     private function storageLines(ColdStorageBill $bill): array
     {
-        $items = ColdStorageReceiptItem::query()
+        $query = ColdStorageReceiptItem::query()
             ->whereHas('receipt', function ($query) use ($bill): void {
                 $query->where('merchant_id', $bill->merchant_id)
                     ->where('branch_id', $bill->branch_id)
                     ->where('customer_id', $bill->customer_id)
                     ->where('status', 'posted');
-            })
-            ->get();
+            });
 
+        if (filled($bill->dispatch_id)) {
+            $lotItemIds = ColdStorageDispatch::query()
+                ->whereKey($bill->dispatch_id)
+                ->firstOrFail()
+                ->lines()
+                ->pluck('receipt_item_id');
+
+            $query->whereIn('id', $lotItemIds);
+        }
+
+        $items = $query->get();
         $lines = [];
 
         foreach ($items as $item) {
@@ -274,16 +522,29 @@ class BillingService
 
         $start = $bill->period_start->copy()->startOfDay();
         $end = $bill->period_end->copy()->startOfDay();
+        $alreadyBilled = $this->alreadyBilledByDay($item, $start->toDateString(), $end->toDateString());
         $segments = [];
 
+        $dispatchLine = filled($bill->dispatch_id)
+            ? ColdStorageDispatchLine::query()
+                ->with('dispatch')
+                ->where('dispatch_id', $bill->dispatch_id)
+                ->where('receipt_item_id', $item->id)
+                ->first()
+            : null;
+
         for ($day = $start->copy(); $day->lte($end); $day->addDay()) {
-            $quantity = $this->billableQuantity($bill, $item, $movements, $day->copy());
+            $dayKey = $day->toDateString();
+            $raw = $dispatchLine
+                ? $this->dispatchBillableQuantity($bill, $item, $movements, $day->copy(), $dispatchLine)
+                : $this->billableQuantity($bill, $item, $movements, $day->copy());
+            $quantity = Quantities::roundQuantity($raw - (float) ($alreadyBilled[$dayKey] ?? 0));
 
             if ($quantity <= 0) {
                 continue;
             }
 
-            $card = $this->rateCard($bill, $day->toDateString());
+            $card = $this->rateCard($bill, $dayKey);
             $key = $card->id;
 
             if (! isset($segments[$key])) {
@@ -291,15 +552,17 @@ class BillingService
                     'card' => $card,
                     'quantity_days' => 0.0,
                     'billable_days' => 0,
-                    'first' => $day->toDateString(),
-                    'last' => $day->toDateString(),
+                    'first' => $dayKey,
+                    'last' => $dayKey,
                     'months' => [],
+                    'daily' => [],
                 ];
             }
 
             $segments[$key]['quantity_days'] += $quantity;
             $segments[$key]['billable_days']++;
-            $segments[$key]['last'] = $day->toDateString();
+            $segments[$key]['last'] = $dayKey;
+            $segments[$key]['daily'][$dayKey] = $quantity;
             $monthKey = $day->format('Y-m');
             $segments[$key]['months'][$monthKey]['quantity_days'] = ($segments[$key]['months'][$monthKey]['quantity_days'] ?? 0) + $quantity;
             $segments[$key]['months'][$monthKey]['length'] = $day->daysInMonth;
@@ -336,10 +599,36 @@ class BillingService
                 'season_length_days' => $card->season_length_days,
                 'minimum_charge' => $card->minimum_charge,
                 'calculation_note' => $this->note($card, $segment['quantity_days'], $segment['billable_days']),
+                'daily_breakdown' => $segment['daily'],
             ];
         }
 
         return $lines;
+    }
+
+    /**
+     * Quantity already billed for this receipt item on each day, from any other bill
+     * still in posted status. Cancelling a bill drops its lines out of this lookup,
+     * which is what releases the entitlement it had claimed.
+     *
+     * @return array<string, float>
+     */
+    private function alreadyBilledByDay(ColdStorageReceiptItem $item, string $from, string $to): array
+    {
+        return ColdStorageBilledEntitlement::query()
+            ->join('cold_storage_bill_lines', 'cold_storage_bill_lines.id', '=', 'cold_storage_billed_entitlements.bill_line_id')
+            ->join('cold_storage_bills', 'cold_storage_bills.id', '=', 'cold_storage_bill_lines.bill_id')
+            ->where('cold_storage_billed_entitlements.receipt_item_id', $item->id)
+            ->where('cold_storage_bills.status', 'posted')
+            ->whereDate('cold_storage_billed_entitlements.occurred_on', '>=', $from)
+            ->whereDate('cold_storage_billed_entitlements.occurred_on', '<=', $to)
+            ->selectRaw('cold_storage_billed_entitlements.occurred_on as day, SUM(cold_storage_billed_entitlements.quantity) as qty')
+            ->groupBy('cold_storage_billed_entitlements.occurred_on')
+            ->get()
+            ->mapWithKeys(fn ($row): array => [
+                Carbon::parse($row->day)->toDateString() => (float) $row->qty,
+            ])
+            ->all();
     }
 
     /**
@@ -368,14 +657,18 @@ class BillingService
         $weight = $balance['weight'];
 
         $firstReceipt = $movements->first(fn (ColdStorageMovement $movement): bool => $movement->movement_type === 'receive');
+        $isArrivalDay = $firstReceipt && $firstReceipt->occurred_on->toDateString() === $day->toDateString();
 
-        if ($firstReceipt && ! $card->bill_arrival_day && $firstReceipt->occurred_on->toDateString() === $day->toDateString()) {
-            $received = $this->signed($today, 'receive', false);
+        if ($isArrivalDay && ! $card->bill_arrival_day) {
+            $received = $this->signed($today, ['receive'], false);
             $packages -= $received['packages'];
             $weight -= $received['weight'];
         }
 
-        if ($card->bill_departure_day) {
+        // A same-day round trip (received and dispatched on the arrival day) still
+        // owes that day's rent when the arrival day is billed: the departure-day
+        // exclusion is meant for a later, separate departure day, not this one.
+        if ($card->bill_departure_day || ($isArrivalDay && $card->bill_arrival_day)) {
             $left = $this->signed($today, null, true);
             $packages += $left['packages'];
             $weight += $left['weight'];
@@ -385,6 +678,54 @@ class BillingService
         $weight = max(0, $weight);
 
         return Quantities::chargeQuantity((string) $card->charge_basis, $packages, $weight, (string) $item->weight_unit);
+    }
+
+    /**
+     * Bills exactly the quantity this withdrawal took out, for every day it sat
+     * in the chamber (arrival through departure, subject to the rate card's
+     * arrival/departure day flags) — not whatever the lot's overall chamber
+     * balance was that day. This is what lets "Bill this withdrawal" charge
+     * for the withdrawn bags even when they arrived and left the same day,
+     * independent of how much of the lot remains in storage.
+     *
+     * @param  Collection<int, ColdStorageMovement>  $movements
+     */
+    private function dispatchBillableQuantity(ColdStorageBill $bill, ColdStorageReceiptItem $item, Collection $movements, Carbon $day, ColdStorageDispatchLine $dispatchLine): float
+    {
+        try {
+            $card = $this->rateCard($bill, $day->toDateString());
+        } catch (ColdStorageException) {
+            return 0.0;
+        }
+
+        $firstReceipt = $movements->first(fn (ColdStorageMovement $movement): bool => $movement->movement_type === 'receive');
+
+        if (! $firstReceipt) {
+            return 0.0;
+        }
+
+        $arrivalDay = $firstReceipt->occurred_on->toDateString();
+        $departureDay = $dispatchLine->dispatch->dispatched_on->toDateString();
+        $dayKey = $day->toDateString();
+
+        if ($dayKey < $arrivalDay || $dayKey > $departureDay) {
+            return 0.0;
+        }
+
+        if ($dayKey === $arrivalDay && ! $card->bill_arrival_day) {
+            return 0.0;
+        }
+
+        if ($dayKey === $departureDay && $dayKey !== $arrivalDay && ! $card->bill_departure_day) {
+            return 0.0;
+        }
+
+        return Quantities::chargeQuantity(
+            (string) $card->charge_basis,
+            (float) $dispatchLine->package_count,
+            (float) $dispatchLine->net_weight,
+            (string) $item->weight_unit
+        );
     }
 
     /**
@@ -401,13 +742,14 @@ class BillingService
 
     /**
      * @param  Collection<int, ColdStorageMovement>  $movements
+     * @param  string|list<string>|null  $type
      * @return array{packages: float, weight: float}
      */
-    private function signed(Collection $movements, ?string $type, bool $leavingOnly): array
+    private function signed(Collection $movements, string|array|null $type, bool $leavingOnly): array
     {
         $filtered = $movements->filter(function (ColdStorageMovement $movement) use ($type, $leavingOnly): bool {
             if ($type !== null) {
-                return $movement->movement_type === $type;
+                return in_array($movement->movement_type, (array) $type, true);
             }
 
             if (! in_array($movement->movement_type, ['dispatch', 'damage', 'adjustment', 'reversal'], true)) {

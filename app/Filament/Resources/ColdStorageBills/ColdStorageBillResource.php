@@ -132,6 +132,10 @@ class ColdStorageBillResource extends ColdStorageResource
                     TextEntry::make('status')->badge(),
                     TextEntry::make('branch.name')->label('Branch'),
                     TextEntry::make('customer.name')->label('Customer'),
+                    TextEntry::make('dispatch.dispatch_no')
+                        ->label('Withdrawal')
+                        ->placeholder('Not linked to a specific withdrawal')
+                        ->visible(fn ($record): bool => filled($record->dispatch_id)),
                     TextEntry::make('period_start')->date('d/m/Y'),
                     TextEntry::make('period_end')->date('d/m/Y'),
                     TextEntry::make('charge_basis'),
@@ -217,7 +221,7 @@ class ColdStorageBillResource extends ColdStorageResource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with(['payments']);
+        return parent::getEloquentQuery()->with(['payments', 'dispatch']);
     }
 
     public static function getPages(): array

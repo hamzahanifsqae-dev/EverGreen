@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Customer extends Model implements Auditable
@@ -21,8 +22,25 @@ class Customer extends Model implements Auditable
 
     /** @var string[] $fillable */
     protected $fillable = [
-        'merchant_id', 'name', 'phone', 'email', 'city', 'reference', 'country_id', 'city_id', 'postal_code', 'address','occupation',
+        'merchant_id', 'name', 'phone', 'email', 'city', 'reference', 'account_code', 'storage_billing_preference', 'country_id', 'city_id', 'postal_code', 'address','occupation',
     ];
+
+    public const BILLING_PREFERENCE_PERIODIC = 'periodic';
+
+    public const BILLING_PREFERENCE_ON_WITHDRAWAL = 'on_withdrawal';
+
+    public static function storageBillingPreferenceOptions(): array
+    {
+        return [
+            self::BILLING_PREFERENCE_PERIODIC => 'Bill periodically (while goods are still stored)',
+            self::BILLING_PREFERENCE_ON_WITHDRAWAL => 'Bill on withdrawal only',
+        ];
+    }
+
+    public function storageBillingPreferenceLabel(): ?string
+    {
+        return self::storageBillingPreferenceOptions()[$this->storage_billing_preference] ?? null;
+    }
 
     /** @var string $keyType */
     protected $keyType = 'string';
@@ -90,6 +108,11 @@ class Customer extends Model implements Auditable
     public function cashFlows(): MorphMany
     {
         return $this->morphMany(CashFlow::class, 'party');
+    }
+
+    public function legacyReferences(): HasMany
+    {
+        return $this->hasMany(ColdStorageCustomerLegacyReference::class, 'customer_id');
     }
 
 }

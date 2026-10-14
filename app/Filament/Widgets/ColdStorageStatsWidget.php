@@ -36,6 +36,13 @@ class ColdStorageStatsWidget extends Widget
 
     protected static ?int $sort = 1;
 
+    /**
+     * A local override for just the Overview "Chamber Occupancy" card, so it
+     * can be switched to one chamber without changing the page-level filters
+     * (and therefore without affecting any of the other cards/charts).
+     */
+    public ?string $occupancyChamberId = null;
+
     public static function canView(): bool
     {
         return UiModules::enabled('cold_storage')
@@ -58,6 +65,10 @@ class ColdStorageStatsWidget extends Widget
                 'trend' => $this->emptyTrend(),
                 'stock' => $this->emptyStock(),
                 'occupancy' => $this->emptyOccupancy(),
+                'cardOccupancy' => $this->emptyOccupancy(),
+                'cardChamberCount' => 0,
+                'occupancyChamberOptions' => [],
+                'occupancyChamberId' => $this->occupancyChamberId,
                 'leaders' => ['customers' => []],
                 'currency' => $currency,
                 'filterPeriodLabel' => $this->filterPeriodLabel($filters),
@@ -69,15 +80,28 @@ class ColdStorageStatsWidget extends Widget
 
         $chamberQuery = ColdStorageAccess::scope(ColdStorageChamber::query()->where('is_active', true));
         $this->applyBranchFilters($chamberQuery, $filters);
+        $chamberQuery->when($filters['chamber_id'], fn ($query, $id) => $query->where('id', $id));
+
+        // Options for the Overview card's own chamber selector, scoped by the
+        // current business/branch filters but independent of the page-level
+        // chamber filter itself (so the dropdown always lists every chamber
+        // available to switch to).
+        $occupancyChamberQuery = ColdStorageAccess::scope(ColdStorageChamber::query()->where('is_active', true));
+        $this->applyBranchFilters($occupancyChamberQuery, $filters);
+        $occupancyChamberOptions = (clone $occupancyChamberQuery)->orderBy('name')->pluck('name', 'id')->all();
 
         // Overview document counts are live (business/branch only). Date filters
         // remain for billing and the Operations Pulse charts.
         $receiptQuery = ColdStorageAccess::scope(ColdStorageReceipt::query());
         $this->applyBranchFilters($receiptQuery, $filters);
+        $this->applyChamberFilter($receiptQuery, $filters, 'items.allocations');
 
         $dispatchQuery = ColdStorageAccess::scope(ColdStorageDispatch::query());
         $this->applyBranchFilters($dispatchQuery, $filters);
+        $this->applyChamberFilter($dispatchQuery, $filters, 'lines');
 
+        // Bills are per customer/lot, not scoped to a single chamber, so the
+        // chamber filter intentionally does not narrow billing totals.
         $billQuery = ColdStorageAccess::scope(ColdStorageBill::query()->where('status', 'posted'));
         $this->applyBillPeriodFilters($billQuery, $filters);
 
@@ -85,6 +109,7 @@ class ColdStorageStatsWidget extends Widget
             ->where('merchant_id', $merchantId)
             ->when($filters['business_id'], fn ($query, $id) => $query->where('business_id', $id))
             ->when($filters['branch_id'], fn ($query, $id) => $query->where('branch_id', $id))
+            ->when($filters['chamber_id'], fn ($query, $id) => $query->where('chamber_id', $id))
             ->selectRaw('SUM(package_delta) as packages')
             ->selectRaw('SUM(weight_delta) as weight')
             ->first();
@@ -93,6 +118,7 @@ class ColdStorageStatsWidget extends Widget
             ->where('merchant_id', $merchantId)
             ->when($filters['business_id'], fn ($query, $id) => $query->where('business_id', $id))
             ->when($filters['branch_id'], fn ($query, $id) => $query->where('branch_id', $id))
+            ->when($filters['chamber_id'], fn ($query, $id) => $query->where('chamber_id', $id))
             ->select('receipt_item_id')
             ->selectRaw('SUM(package_delta) as packages')
             ->selectRaw('SUM(weight_delta) as weight')
@@ -117,13 +143,22 @@ class ColdStorageStatsWidget extends Widget
 
         $receiptPackages = (float) ColdStorageReceiptItem::query()
             ->whereIn('receipt_id', (clone $receiptQuery)->where('status', 'posted')->select('id'))
+            ->when(
+                $filters['chamber_id'],
+                fn ($query, $id) => $query->whereHas('allocations', fn ($q) => $q->where('chamber_id', $id))
+            )
             ->sum('package_count');
 
         $dispatchPackages = (float) ColdStorageDispatchLine::query()
             ->whereIn('dispatch_id', (clone $dispatchQuery)->where('status', 'posted')->select('id'))
+            ->when($filters['chamber_id'], fn ($query, $id) => $query->where('chamber_id', $id))
             ->sum('package_count');
 
         $chambers = (clone $chamberQuery)->get();
+
+        $cardChambers = filled($this->occupancyChamberId)
+            ? (clone $occupancyChamberQuery)->where('id', $this->occupancyChamberId)->get()
+            : $chambers;
 
         return [
             'stats' => [
@@ -154,6 +189,10 @@ class ColdStorageStatsWidget extends Widget
                 'lots' => $stockLots,
             ],
             'occupancy' => $this->occupancySummary($chambers),
+            'cardOccupancy' => $this->occupancySummary($cardChambers),
+            'cardChamberCount' => $cardChambers->count(),
+            'occupancyChamberOptions' => $occupancyChamberOptions,
+            'occupancyChamberId' => $this->occupancyChamberId,
             'trend' => $this->trendData($filters),
             'leaders' => [
                 'customers' => $this->topCustomersByReceipts($filters),
@@ -271,7 +310,7 @@ class ColdStorageStatsWidget extends Widget
     }
 
     /**
-     * @param  array{business_id: ?string, branch_id: ?string, date_from: ?string, date_to: ?string}  $filters
+     * @param  array{business_id: ?string, branch_id: ?string, chamber_id: ?string, date_from: ?string, date_to: ?string}  $filters
      * @return array{labels: list<string>, receipts: list<int>, dispatches: list<int>}
      */
     private function trendData(array $filters): array
@@ -291,11 +330,13 @@ class ColdStorageStatsWidget extends Widget
                 ColdStorageReceipt::query()->where('status', 'posted')
             );
             $this->applyBranchFilters($receiptQuery, $filters);
+            $this->applyChamberFilter($receiptQuery, $filters, 'items.allocations');
 
             $dispatchQuery = ColdStorageAccess::scope(
                 ColdStorageDispatch::query()->where('status', 'posted')
             );
             $this->applyBranchFilters($dispatchQuery, $filters);
+            $this->applyChamberFilter($dispatchQuery, $filters, 'lines');
 
             $receiptSeries[$index] = (clone $receiptQuery)
                 ->whereDate('received_on', '>=', $start)
@@ -316,7 +357,7 @@ class ColdStorageStatsWidget extends Widget
     }
 
     /**
-     * @param  array{business_id: ?string, branch_id: ?string, date_from: ?string, date_to: ?string}  $filters
+     * @param  array{business_id: ?string, branch_id: ?string, chamber_id: ?string, date_from: ?string, date_to: ?string}  $filters
      * @return list<array{name: string, count: int, amount: float}>
      */
     private function topCustomersByReceipts(array $filters): array
@@ -325,6 +366,7 @@ class ColdStorageStatsWidget extends Widget
             ColdStorageReceipt::query()->where('status', 'posted')
         );
         $this->applyDocumentFilters($query, $filters, 'received_on');
+        $this->applyChamberFilter($query, $filters, 'items.allocations');
 
         return $query
             ->selectRaw('customer_id, COUNT(*) as receipt_count')
@@ -365,13 +407,14 @@ class ColdStorageStatsWidget extends Widget
     }
 
     /**
-     * @return array{business_id: ?string, branch_id: ?string, date_from: ?string, date_to: ?string}
+     * @return array{business_id: ?string, branch_id: ?string, chamber_id: ?string, date_from: ?string, date_to: ?string}
      */
     private function filters(): array
     {
         return [
             'business_id' => $this->pageFilters['business_id'] ?? null,
             'branch_id' => $this->pageFilters['branch_id'] ?? null,
+            'chamber_id' => $this->pageFilters['chamber_id'] ?? null,
             'date_from' => $this->normalizeFilterDate($this->pageFilters['date_from'] ?? null),
             'date_to' => $this->normalizeFilterDate($this->pageFilters['date_to'] ?? null),
         ];
@@ -395,6 +438,19 @@ class ColdStorageStatsWidget extends Widget
         $query
             ->when($filters['business_id'], fn ($q, $id) => $q->where('business_id', $id))
             ->when($filters['branch_id'], fn ($q, $id) => $q->where('branch_id', $id));
+    }
+
+    /**
+     * Scopes a receipt/dispatch header query down to documents that touch the
+     * selected chamber, via its line/allocation relation — receipts and
+     * dispatches don't carry chamber_id directly, only their lines do.
+     */
+    private function applyChamberFilter($query, array $filters, string $relation): void
+    {
+        $query->when(
+            $filters['chamber_id'],
+            fn ($q, $id) => $q->whereHas($relation, fn ($r) => $r->where('chamber_id', $id))
+        );
     }
 
     private function applyDocumentFilters($query, array $filters, string $dateColumn): void

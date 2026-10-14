@@ -7,6 +7,7 @@ use App\Filament\Widgets\ColdStorageStatsWidget;
 use App\Filament\Widgets\ReportsStatsWidget;
 use App\Models\Branch;
 use App\Models\Business;
+use App\Models\ColdStorageChamber;
 use App\Models\Merchant;
 use App\Models\ProductVariant;
 use App\Models\User;
@@ -97,6 +98,7 @@ class Dashboard extends BaseDashboard
                 ->live()
                 ->afterStateUpdated(function (callable $set): void {
                     $set('branch_id', null);
+                    $set('chamber_id', null);
                     $set('product_variant_ids', []);
                 }),
 
@@ -136,8 +138,51 @@ class Dashboard extends BaseDashboard
                         ->pluck('name', 'id')
                         ->toArray();
                 })
-                ->afterStateUpdated(fn (callable $set) => $set('product_variant_ids', [])),
+                ->afterStateUpdated(function (callable $set): void {
+                    $set('chamber_id', null);
+                    $set('product_variant_ids', []);
+                }),
         ];
+
+        if (UiModules::enabled('cold_storage')) {
+            $fields[] = Select::make('chamber_id')
+                ->label('Chamber')
+                ->placeholder('All chambers')
+                ->searchable()
+                ->preload()
+                ->options(function (callable $get) {
+                    $user = Filament::auth()->user();
+
+                    $merchantId = match (true) {
+                        $user instanceof Merchant => $user->id,
+                        $user instanceof User => $user->merchant_id,
+                        default => null,
+                    };
+
+                    if (! $merchantId) {
+                        return [];
+                    }
+
+                    $query = ColdStorageChamber::query()
+                        ->where('merchant_id', $merchantId)
+                        ->where('is_active', true);
+
+                    if ($branchId = $get('branch_id')) {
+                        $query->where('branch_id', $branchId);
+                    } elseif ($businessId = $get('business_id')) {
+                        $query->where('business_id', $businessId);
+                    }
+
+                    if ($user instanceof User) {
+                        $query->whereHas('branch.users', fn ($q) => $q->where('users.id', $user->id));
+                    }
+
+                    return $query
+                        ->orderBy('name')
+                        ->pluck('name', 'id')
+                        ->toArray();
+                });
+        }
 
         if (UiModules::enabled('product_variants') && UiModules::anyDashboardOverviewEnabled()) {
             $fields[] = Select::make('product_variant_ids')
@@ -231,7 +276,9 @@ class Dashboard extends BaseDashboard
                     ->columns([
                         'default' => 1,
                         'sm' => 2,
-                        'xl' => min(count($fields), 4),
+                        'lg' => min(count($fields), 3),
+                        'xl' => min(count($fields), 5),
+                        '2xl' => min(count($fields), 6),
                     ])
                     ->columnSpanFull(),
             ]);

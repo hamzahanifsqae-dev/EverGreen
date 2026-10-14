@@ -17,7 +17,7 @@ class ColdStorageDispatch extends Model implements Auditable
     use SoftDeletes;
 
     protected $fillable = [
-        'merchant_id', 'business_id', 'branch_id', 'customer_id', 'dispatch_no', 'dispatched_on',
+        'merchant_id', 'business_id', 'branch_id', 'customer_id', 'dispatch_no', 'legacy_reference', 'dispatched_on',
         'recipient_name', 'vehicle_number', 'notes', 'status', 'posted_at', 'posted_by',
         'cancelled_at', 'cancelled_by', 'cancellation_reason', 'created_by',
     ];

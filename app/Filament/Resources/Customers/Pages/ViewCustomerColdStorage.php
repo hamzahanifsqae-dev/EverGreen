@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Customers\Pages;
 
+use App\Filament\Resources\ColdStorageBills\ColdStorageBillResource;
 use App\Filament\Resources\ColdStorageDispatches\ColdStorageDispatchResource;
 use App\Filament\Resources\ColdStorageReceipts\ColdStorageReceiptResource;
 use App\Filament\Resources\Customers\CustomerResource;
@@ -37,7 +38,7 @@ class ViewCustomerColdStorage extends Page
         );
 
         $this->record = $record;
-        $this->overview = app(CustomerStorageOverviewService::class)->forCustomer($record);
+        $this->overview = app(CustomerStorageOverviewService::class)->forCustomer($record, ColdStorageAccess::user());
     }
 
     public function getTitle(): string
@@ -53,6 +54,19 @@ class ViewCustomerColdStorage extends Page
                 ->icon('heroicon-o-pencil-square')
                 ->url(CustomerResource::getUrl('edit', ['record' => $this->record])),
         ];
+
+        if (UiModules::enabled('cold_storage') && ColdStorageAccess::can('view')) {
+            $actions[] = Action::make('ledger')
+                ->label('Customer ledger')
+                ->icon('heroicon-o-banknotes')
+                ->color('warning')
+                ->url(CustomerResource::getUrl('ledger', ['record' => $this->record]));
+
+            $actions[] = Action::make('bills')
+                ->label('Storage bills')
+                ->icon('heroicon-o-document-text')
+                ->url($this->billsIndexUrl());
+        }
 
         if (UiModules::enabled('cold_storage') && ColdStorageAccess::can('create')) {
             $actions[] = Action::make('new_receipt')
@@ -85,6 +99,11 @@ class ViewCustomerColdStorage extends Page
     public function returnsIndexUrl(): string
     {
         return $this->filteredResourceUrl(ColdStorageDispatchResource::getUrl('index'));
+    }
+
+    public function billsIndexUrl(): string
+    {
+        return $this->filteredResourceUrl(ColdStorageBillResource::getUrl('index'));
     }
 
     public function receiptViewUrl(string $id): string

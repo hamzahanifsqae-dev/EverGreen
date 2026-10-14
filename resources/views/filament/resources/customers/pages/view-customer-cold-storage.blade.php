@@ -7,7 +7,18 @@
         <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5 stats-card dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-700/40">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <p class="text-lg font-semibold text-slate-900 dark:text-slate-100">Overview</p>
-                <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-200">Customer stock</span>
+                <div class="flex flex-wrap items-center gap-2">
+                    @if ($overview['customer']->storage_billing_preference)
+                        <span @class([
+                            'rounded-full px-3 py-1 text-xs font-semibold',
+                            'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200' => $overview['customer']->storage_billing_preference === \App\Models\Customer::BILLING_PREFERENCE_PERIODIC,
+                            'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200' => $overview['customer']->storage_billing_preference === \App\Models\Customer::BILLING_PREFERENCE_ON_WITHDRAWAL,
+                        ])>
+                            {{ $overview['customer']->storageBillingPreferenceLabel() }}
+                        </span>
+                    @endif
+                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-200">Customer stock</span>
+                </div>
             </div>
 
             <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">

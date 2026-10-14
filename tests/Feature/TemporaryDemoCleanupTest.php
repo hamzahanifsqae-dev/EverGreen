@@ -21,6 +21,8 @@ class TemporaryDemoCleanupTest extends TestCase
             'id' => Str::uuid()->toString(),
             'email' => DemoAccount::temporaryEmailForSession($sessionId),
             'name' => 'Demo Cleanup Test',
+            'address_line_1' => 'Demo City',
+            'city' => 'Karachi',
             'status' => Merchant::STATUS_VERIFIED,
             'is_active' => true,
             'password' => 'password',

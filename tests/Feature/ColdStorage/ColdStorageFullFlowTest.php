@@ -385,7 +385,9 @@ class ColdStorageFullFlowTest extends TestCase
             $table->uuid('id')->primary();
             $table->uuid('merchant_id');
             $table->string('name');
+            $table->string('phone')->nullable();
             $table->string('email')->nullable();
+            $table->string('reference')->nullable();
             $table->string('postal_code')->nullable();
             $table->timestamps();
             $table->softDeletes();
@@ -444,7 +446,7 @@ class ColdStorageFullFlowTest extends TestCase
             $table->string('party_type');
             $table->uuid('party_id');
             $table->string('direction');
-            $table->string('entry_type');
+            $table->enum('entry_type', ['payment', 'refund', 'adjustment', 'advance'])->default('payment');
             $table->decimal('amount', 14, 2);
             $table->date('payment_date');
             $table->string('method')->nullable();
@@ -477,5 +479,17 @@ class ColdStorageFullFlowTest extends TestCase
 
         $alertEmailMigration = require database_path('migrations/2026_10_07_130000_create_cold_storage_alert_email_settings_table.php');
         $alertEmailMigration->up();
+
+        foreach ([
+            '2026_10_12_100000_add_cold_storage_legacy_references',
+            '2026_10_12_100100_create_cold_storage_billed_entitlements_table',
+            '2026_10_12_100200_add_dispatch_scope_to_cold_storage_bills_table',
+            '2026_10_12_100300_create_cold_storage_bill_allocations',
+            '2026_10_12_100400_create_cold_storage_opening_balances_and_stock',
+            '2026_10_13_190000_drop_cold_storage_opening_balances_table',
+            '2026_10_13_191000_drop_cold_storage_opening_stocks_table',
+        ] as $name) {
+            (require database_path("migrations/{$name}.php"))->up();
+        }
     }
 }

@@ -25,6 +25,18 @@ Route::get('/cold-storage/{type}/{id}/print', [ColdStorageDocumentController::cl
     ->middleware(['web', 'auth.staff_or_merchant'])
     ->name('cold-storage.print');
 
+Route::get('/cold-storage/customer/{customer}/ledger/print', [ColdStorageDocumentController::class, 'ledger'])
+    ->middleware(['web', 'auth.staff_or_merchant'])
+    ->name('cold-storage.print.ledger');
+
+Route::get('/cold-storage/stock-register/print', [ColdStorageDocumentController::class, 'stockRegister'])
+    ->middleware(['web', 'auth.staff_or_merchant'])
+    ->name('cold-storage.print.stock-register');
+
+Route::get('/cold-storage/rent-register/print', [ColdStorageDocumentController::class, 'rentRegister'])
+    ->middleware(['web', 'auth.staff_or_merchant'])
+    ->name('cold-storage.print.rent-register');
+
 Route::get('/assets/preview/{id}', [AssetPreviewController::class, 'show'])
     ->middleware(['web', 'auth.staff_or_merchant'])
     ->name('assets.preview');

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ColdStorageDispatches;
 
+use App\Filament\ColdStorage\ColdStorageActions;
 use App\Filament\ColdStorage\LotOptions;
 use App\Filament\Resources\ColdStorage\ColdStorageResource;
 use App\Filament\Resources\ColdStorageDispatches\Pages\CreateColdStorageDispatch;
@@ -84,6 +85,9 @@ class ColdStorageDispatchResource extends ColdStorageResource
                         ->required(),
                     TextInput::make('vehicle_number')
                         ->label('Vehicle number'),
+                    TextInput::make('legacy_reference')
+                        ->label('Legacy register reference')
+                        ->helperText('Serial/page reference from the paper register, if any.'),
                     Textarea::make('notes')
                         ->rows(3)
                         ->columnSpanFull(),
@@ -156,6 +160,7 @@ class ColdStorageDispatchResource extends ColdStorageResource
                     TextEntry::make('customer.name')->label('Customer'),
                     TextEntry::make('recipient_name')->label('Recipient'),
                     TextEntry::make('vehicle_number')->label('Vehicle'),
+                    TextEntry::make('legacy_reference')->label('Legacy reference')->placeholder('—'),
                     TextEntry::make('notes')->columnSpanFull(),
                 ]),
             Section::make('Withdrawal')
@@ -195,6 +200,7 @@ class ColdStorageDispatchResource extends ColdStorageResource
             ViewAction::make(),
             EditAction::make()
                 ->visible(fn (ColdStorageDispatch $record): bool => static::canEdit($record)),
+            ColdStorageActions::print('dispatch'),
         ])->defaultSort('dispatched_on', 'desc');
     }
 

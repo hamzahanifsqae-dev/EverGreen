@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     @php
         $isSale = $type === 'sale';
@@ -412,6 +413,18 @@
             }
         }
 
+        @media (max-width: 560px) {
+            .invoice-items-scroll {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .invoice-items-scroll table {
+                width: auto;
+                min-width: 640px;
+            }
+        }
+
         @media print {
             @page {
                 size: A4;
@@ -581,6 +594,7 @@
 
                 <div class="divider"></div>
 
+                <div class="invoice-items-scroll">
                 <table>
                     <thead>
                     <tr>
@@ -627,6 +641,7 @@
                     @endforeach
                     </tbody>
                 </table>
+                </div>
 
                 <div class="footer-gap"></div>
 

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -26,6 +27,7 @@ class Payment extends Model
         'direction',
         'entry_type',
         'amount',
+        'unallocated_amount',
         'payment_date',
         'method',
         'reference_no',
@@ -35,6 +37,7 @@ class Payment extends Model
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'unallocated_amount' => 'decimal:2',
         'payment_date' => 'date',
     ];
 
@@ -56,5 +59,15 @@ class Payment extends Model
     public function party(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    public function allocations(): HasMany
+    {
+        return $this->hasMany(ColdStorageBillAllocation::class, 'payment_id');
+    }
+
+    public function isUnallocatedAdvance(): bool
+    {
+        return $this->entry_type === 'advance';
     }
 }

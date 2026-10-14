@@ -337,20 +337,22 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="mt-4 grid grid-cols-6 gap-3">
-                                @foreach ($labels as $index => $label)
-                                    <div class="flex flex-col items-center gap-2">
-                                        <div class="relative flex h-48 items-end gap-1">
-                                            <div class="relative w-3 rounded-full bg-blue-500" style="height: {{ $barHeights['sales'][$index] ?? 0 }}%;" x-show="showSales">
-                                                <span class="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-semibold text-slate-700">{{ number_format($salesSeries[$index] ?? 0) }}</span>
+                            <div class="mt-4 overflow-x-auto">
+                                <div class="grid grid-cols-6 gap-3 min-w-[420px] sm:min-w-0">
+                                    @foreach ($labels as $index => $label)
+                                        <div class="flex flex-col items-center gap-2">
+                                            <div class="relative flex h-48 items-end gap-1">
+                                                <div class="relative w-3 rounded-full bg-blue-500" style="height: {{ $barHeights['sales'][$index] ?? 0 }}%;" x-show="showSales">
+                                                    <span class="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-semibold text-slate-700">{{ number_format($salesSeries[$index] ?? 0) }}</span>
+                                                </div>
+                                                <div class="relative w-3 rounded-full bg-emerald-500" style="height: {{ $barHeights['purchases'][$index] ?? 0 }}%;" x-show="showPurchases">
+                                                    <span class="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-semibold text-slate-700">{{ number_format($purchaseSeries[$index] ?? 0) }}</span>
+                                                </div>
                                             </div>
-                                            <div class="relative w-3 rounded-full bg-emerald-500" style="height: {{ $barHeights['purchases'][$index] ?? 0 }}%;" x-show="showPurchases">
-                                                <span class="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-semibold text-slate-700">{{ number_format($purchaseSeries[$index] ?? 0) }}</span>
-                                            </div>
+                                            <span class="text-xs text-slate-500 dark:text-slate-400">{{ $label }}</span>
                                         </div>
-                                        <span class="text-xs text-slate-500 dark:text-slate-400">{{ $label }}</span>
-                                    </div>
-                                @endforeach
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
 
