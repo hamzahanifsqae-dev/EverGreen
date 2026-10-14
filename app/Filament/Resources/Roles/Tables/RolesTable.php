@@ -30,6 +30,7 @@ class RolesTable
                     ->searchable(),
                 BadgeColumn::make('guard_name')
                     ->label('Portal')
+                    ->formatStateUsing(fn (string $state) => $state === 'merchant' ? 'Owner & Staff' : $state)
                     ->color('primary')
                     ->sortable(),
                 BadgeColumn::make('permissions_count')
