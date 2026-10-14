@@ -172,15 +172,15 @@
                     <div class="mt-4 space-y-2 text-sm text-slate-700 dark:text-slate-300">
                         <div class="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
                             <span class="whitespace-nowrap">Bills with balance</span>
-                            <span class="whitespace-nowrap font-medium text-slate-900 dark:text-slate-100 ml-auto">{{ number_format($stats['bills_due'] ?? 0) }}</span>
+                            <span class="whitespace-nowrap font-medium text-slate-900 dark:text-slate-100">{{ number_format($stats['bills_due'] ?? 0) }}</span>
                         </div>
                         <div class="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
                             <span class="whitespace-nowrap">Collected</span>
-                            <span class="whitespace-nowrap font-medium text-slate-900 dark:text-slate-100 ml-auto">{{ $currency }} {{ number_format((float) ($stats['paid_amount'] ?? 0), 2) }}</span>
+                            <span class="whitespace-nowrap font-medium text-slate-900 dark:text-slate-100">{{ $currency }} {{ number_format((float) ($stats['paid_amount'] ?? 0), 2) }}</span>
                         </div>
                         <div class="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
                             <span class="whitespace-nowrap">Billed amount</span>
-                            <span class="whitespace-nowrap font-medium text-slate-900 dark:text-slate-100 ml-auto">{{ $currency }} {{ number_format((float) ($stats['billed_amount'] ?? 0), 2) }}</span>
+                            <span class="whitespace-nowrap font-medium text-slate-900 dark:text-slate-100">{{ $currency }} {{ number_format((float) ($stats['billed_amount'] ?? 0), 2) }}</span>
                         </div>
                     </div>
                 </div>
