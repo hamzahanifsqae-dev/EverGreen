@@ -80,6 +80,13 @@ class RolesSeeder extends Seeder
                 'vendors.create',
                 'orders.create',
             ],
+
+            // 🧊 COLD STORAGE STAFF — scoped to the Cold Storage module only.
+            // No access to Roles & Permissions, Merchants, Staff, Businesses or Branches.
+            'Staff' => [
+                'dashboard.view',
+                'cold_storage.*',
+            ],
         ];
 
         /**

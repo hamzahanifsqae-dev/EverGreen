@@ -22,7 +22,7 @@ class CreateEvergreenStaffUserCommand extends Command
                             {--email=staff@evergreen.com}
                             {--password=Evergreen@123}
                             {--name=EverGreen Staff}
-                            {--role=Admin}
+                            {--role=Staff}
                             {--merchant-email=info@evergreen.com}';
 
     protected $description = 'Create or update the staff login for the EverGreen merchant';
